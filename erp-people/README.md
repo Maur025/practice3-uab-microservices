@@ -4,6 +4,14 @@
 
 Este modulo gestiona datos de personas dentro del sistema: clientes, proveedores y empleados. Ya tiene una API funcional y realiza conexion a MariaDB.
 
+Encargado de las tablas:
+
+- Empleado
+- Cargo
+- Cliente
+- Proveedor
+- Usuario
+
 ## Puerto
 
 7802 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

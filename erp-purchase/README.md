@@ -4,6 +4,11 @@
 
 Modulo orientado al flujo de compras del sistema. Su configuracion esta preparada para levantar una API propia y conectarse a MariaDB.
 
+Encargado de las tablas:
+
+- Compra
+- Detalle compra
+
 ## Puerto
 
 7801 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

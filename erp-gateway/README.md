@@ -4,6 +4,12 @@
 
 Este modulo funciona como punto de entrada para centralizar el acceso a los demas microservicios del ERP. Su entorno esta preparado para correr como servicio HTTP y conectarse a MariaDB.
 
+Encargado de las tablas:
+
+- Sucursal
+
+Encargado de manejar y coordinar la comunicación entre todos los servicios
+
 ## Puerto
 
 7800 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

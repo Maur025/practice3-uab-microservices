@@ -39,9 +39,9 @@ jobs:
               working-directory: ./erp-people
 
             - name: Syntax check
-              run: pnpm lint --if-present
+              run: pnpm lint
               working-directory: ./erp-people
 
             - name: Run tests
-              run: pnpm test --if-present
+              run: pnpm test
               working-directory: ./erp-people

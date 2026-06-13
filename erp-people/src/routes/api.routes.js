@@ -5,8 +5,8 @@ import { getEmployees } from "../controllers/employee.controller.js";
 
 const apiRouter = Router();
 
-apiRouter.get("/people/clients", getClients);
-apiRouter.get("/people/providers", getProviders);
-apiRouter.get("/people/employees", getEmployees);
+apiRouter.get("/clients", getClients);
+apiRouter.get("/providers", getProviders);
+apiRouter.get("/employees", getEmployees);
 
 export { apiRouter };

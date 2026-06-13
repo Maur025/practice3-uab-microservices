@@ -10,6 +10,7 @@ Encargado de las tablas:
 - Producto
 - Unidad medida
 - Categoria
+- Movimiento inventario
 
 ## Puerto
 

@@ -4,6 +4,13 @@
 
 Modulo orientado al ciclo de ventas del sistema. Su configuracion esta pensada para exponer una API propia y trabajar con MariaDB.
 
+Encargado de las tablas:
+
+- Venta
+- Detalle venta
+- Factura
+- Detalle factura
+
 ## Puerto
 
 7804 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

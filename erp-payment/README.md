@@ -4,6 +4,13 @@
 
 Modulo pensado para la gestion de pagos del sistema. Su configuracion esta lista para servir una API propia y acceder a MariaDB.
 
+Encargado de las tablas:
+
+- Cuentas por pagar
+- Pago proveedor
+- Cuentas por cobrar
+- Pago cliente
+
 ## Puerto
 
 7805 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

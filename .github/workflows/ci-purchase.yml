@@ -1,0 +1,47 @@
+name: ci purchase
+
+on:
+    push:
+        branches: [main, develop]
+        paths:
+            - "erp-purchase/**"
+    pull_request:
+        branches: [main, develop]
+        paths:
+            - "erp-purchase/**"
+
+jobs:
+    review-and-test:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [24]
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 11
+
+            - name: Setup node ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: "pnpm"
+                  cache-dependency-path: "erp-purchase/pnpm-lock.yaml"
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+              working-directory: ./erp-purchase
+
+            - name: Syntax check
+              run: pnpm lint
+              working-directory: ./erp-purchase
+
+            - name: Run tests
+              run: pnpm test
+              working-directory: ./erp-purchase

@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+echo "Initializing database tables..."
+
+docker exec -i market-system-db mariadb -u root -p'root123456' sistema_supermercado_db < sistema_supermercado.sql
+
+echo "Database tables initialized successfully."

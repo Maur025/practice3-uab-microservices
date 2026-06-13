@@ -4,7 +4,8 @@ import express from "express";
 import compression from "compression";
 import cors from "cors";
 import { loggerInfo } from "@maur025/core-logger";
-// import { router } from "./routes/index.js";
+import { apiRouter } from "./routes/api.routes.js";
+import { initializeDb } from "./db.js";
 
 const app = express();
 app.use(compression());
@@ -23,7 +24,10 @@ app.use(
     limit: "50mb",
   }),
 );
-// app.use(router);
+
+initializeDb();
+
+app.use("/api", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {
   loggerInfo(`[SERVER] Server is running on port ${env.SERVER_APP_PORT}`);

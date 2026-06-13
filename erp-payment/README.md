@@ -1,0 +1,29 @@
+# ERP Payment
+
+## Descripcion
+
+Modulo pensado para la gestion de pagos del sistema. Su configuracion esta lista para servir una API propia y acceder a MariaDB.
+
+## Puerto
+
+7805 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.
+
+## Comandos disponibles
+
+```bash
+pnpm dev
+pnpm start
+pnpm lint
+pnpm test
+pnpm test:watch
+```
+
+## Variables de entorno
+
+| Archivo        | Descripcion                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `.env.example` | Base de configuracion con el puerto del servicio de pagos y los valores necesarios para conectarse a la base de datos. |
+
+## Nota
+
+Este modulo puede utilizarse para procesar cobros, registrar transacciones y coordinar integraciones con otros servicios.

@@ -4,6 +4,13 @@
 
 Modulo encargado del inventario del sistema. Su configuracion esta pensada para exponer una API propia y trabajar con MariaDB.
 
+Encargado de las tablas:
+
+- Inventario
+- Producto
+- Unidad medida
+- Categoria
+
 ## Puerto
 
 7803 por defecto. Puede cambiarse con la variable de entorno `SERVER_APP_PORT`.

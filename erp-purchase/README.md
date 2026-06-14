@@ -2,7 +2,7 @@
 
 ## Descripcion
 
-Modulo orientado al flujo de compras del sistema. Su configuracion esta preparada para levantar una API propia y conectarse a MariaDB.
+Modulo orientado al flujo de compras del sistema. Su API actual permite listar compras y esta conectada a MariaDB.
 
 Encargado de las tablas:
 
@@ -25,9 +25,9 @@ pnpm test:watch
 
 ## Rutas expuestas
 
-```http
-GET /api/compras/compras
-```
+| Metodo | Ruta                   | Descripcion                    |
+| ------ | ---------------------- | ------------------------------ |
+| GET    | `/api/compras/compras` | Lista las compras registradas. |
 
 ## Variables de entorno
 

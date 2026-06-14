@@ -2,13 +2,11 @@
 
 ## Descripcion
 
-Este modulo funciona como punto de entrada para centralizar el acceso a los demas microservicios del ERP. Su entorno esta preparado para correr como servicio HTTP y conectarse a MariaDB.
+Este modulo funciona como punto de entrada para centralizar el acceso a los demas microservicios del ERP. Expone una consulta propia para sucursales y actua como proxy hacia los servicios internos.
 
-Encargado de las tablas:
+Encargado de la tabla:
 
 - Sucursal
-
-Encargado de manejar y coordinar la comunicación entre todos los servicios
 
 ## Puerto
 
@@ -26,16 +24,21 @@ pnpm test:watch
 
 ## Rutas expuestas
 
-```http
-GET /api/organizaciones/sucursales
-```
+| Metodo | Ruta                             | Descripcion                                    |
+| ------ | -------------------------------- | ---------------------------------------------- |
+| GET    | `/api/organizaciones/sucursales` | Consulta las sucursales desde el gateway.      |
+| ANY    | `/api/compras/*`                 | Reenvia solicitudes al servicio de compras.    |
+| ANY    | `/api/personas/*`                | Reenvia solicitudes al servicio de personas.   |
+| ANY    | `/api/inventarios/*`             | Reenvia solicitudes al servicio de inventario. |
+| ANY    | `/api/ventas/*`                  | Reenvia solicitudes al servicio de ventas.     |
+| ANY    | `/api/finanzas/*`                | Reenvia solicitudes al servicio de pagos.      |
 
 ## Variables de entorno
 
-| Archivo        | Descripcion                                                                                                        |
-| -------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `.env.example` | Archivo de referencia para configurar el puerto del gateway y la conexion a MariaDB antes de ejecutar el servicio. |
+| Archivo        | Descripcion                                                                                                                   |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `.env.example` | Archivo de referencia para configurar el puerto del gateway, la conexion a MariaDB y el modo de redireccion (`DEV` o `PROD`). |
 
 ## Nota
 
-Cuando se implemente la logica del gateway, este modulo podra actuar como capa de entrada unificada para consumir los servicios de negocio.
+El gateway puede apuntar a servicios locales en desarrollo o a nombres de servicio del entorno de contenedores segun `SERVER_REDIRECTION`.

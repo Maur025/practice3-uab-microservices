@@ -28,18 +28,20 @@ pnpm test:watch
 
 ## Rutas expuestas
 
-```http
-GET /api/personas/clientes
-GET /api/personas/proveedores
-GET /api/personas/empleados
-```
+| Metodo | Ruta                        | Descripcion                             |
+| ------ | --------------------------- | --------------------------------------- |
+| GET    | `/health`                   | Verifica que el servicio este en linea. |
+| GET    | `/api/personas/clientes`    | Lista todos los clientes.               |
+| GET    | `/api/personas/proveedores` | Lista todos los proveedores.            |
+| GET    | `/api/personas/empleados`   | Lista todos los empleados.              |
 
 ## Variables de entorno
 
-| Archivo        | Descripcion                                                                                                      |
-| -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `.env.example` | Plantilla con el puerto del servicio de personas y la conexion a MariaDB para clientes, proveedores y empleados. |
+| Archivo        | Descripcion                                                                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `.env.example` | Plantilla con el puerto del servicio de personas y la conexion a MariaDB.                                |
+| `INSTANCE_ID`  | Identificador opcional para distinguir procesos o despliegues cuando el servicio se ejecuta en paralelo. |
 
 ## Nota
 
-Al iniciar, el modulo prepara una conexion a base de datos y usa variables de entorno para configurarse.
+Al iniciar, el modulo prepara una conexion a base de datos, usa variables de entorno para configurarse y registra `INSTANCE_ID` si esta definido.

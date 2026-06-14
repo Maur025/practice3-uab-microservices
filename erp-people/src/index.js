@@ -27,6 +27,8 @@ app.use(
 
 initializeDb();
 
+console.log({ instanceId: env.INSTANCE_ID });
+
 app.use("/api/people", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {

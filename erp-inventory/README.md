@@ -2,7 +2,7 @@
 
 ## Descripcion
 
-Modulo encargado del inventario del sistema. Su configuracion esta pensada para exponer una API propia y trabajar con MariaDB.
+Modulo encargado del inventario del sistema. Su API actual expone consultas de catalogo de productos y trabaja con MariaDB.
 
 Encargado de las tablas:
 
@@ -28,9 +28,9 @@ pnpm test:watch
 
 ## Rutas expuestas
 
-```http
-GET /api/inventarios/catalogo/productos
-```
+| Metodo | Ruta                                  | Descripcion                                              |
+| ------ | ------------------------------------- | -------------------------------------------------------- |
+| GET    | `/api/inventarios/catalogo/productos` | Lista el catalogo de productos disponible en inventario. |
 
 ## Variables de entorno
 
@@ -40,4 +40,4 @@ GET /api/inventarios/catalogo/productos
 
 ## Nota
 
-Este modulo esta preparado para crecer como servicio dedicado a productos, existencias y movimientos de stock.
+Este modulo esta orientado al catalogo de productos, existencias y movimientos de stock.

@@ -27,6 +27,23 @@ Cada servicio tiene su propio `package.json`, su configuración de lint y su cic
 | `erp-sale`      | `7804` |
 | `erp-payment`   | `7805` |
 
+## Gateway y endpoints
+
+El gateway corre en `7800` y centraliza el acceso a los microservicios. Además de una consulta propia para sucursales, puede reenviar solicitudes hacia los servicios internos usando los prefijos que se muestran abajo.
+
+| Ruta                                 | Tipo    | Descripcion                                    |
+| ------------------------------------ | ------- | ---------------------------------------------- |
+| `GET /api/organizaciones/sucursales` | Directa | Consulta las sucursales desde el gateway.      |
+| `/api/personas/*`                    | Proxy   | Reenvia solicitudes al servicio de personas.   |
+| `/api/compras/*`                     | Proxy   | Reenvia solicitudes al servicio de compras.    |
+| `/api/inventarios/*`                 | Proxy   | Reenvia solicitudes al servicio de inventario. |
+| `/api/ventas/*`                      | Proxy   | Reenvia solicitudes al servicio de ventas.     |
+| `/api/finanzas/*`                    | Proxy   | Reenvia solicitudes al servicio de pagos.      |
+
+Los prefijos proxyados aceptan los metodos que soporte cada servicio destino.
+
+En el servicio de personas tambien existe el endpoint `GET /health`, que se usa para validar el estado del servicio de forma directa.
+
 ## Tecnologías principales
 
 El stack actual combina varias piezas conocidas:

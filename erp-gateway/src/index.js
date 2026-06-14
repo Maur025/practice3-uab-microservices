@@ -30,9 +30,6 @@ app.use(
 initializeDb();
 
 app.use("/api/organizaciones", apiRouter);
-app.use("/api/tests", (req, res) => {
-  res.json({ message: "Test endpoint is working!" });
-});
 
 Object.entries(configServices).forEach(([path, target]) => {
   app.use(

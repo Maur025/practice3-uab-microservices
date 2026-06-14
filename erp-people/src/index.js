@@ -29,6 +29,7 @@ initializeDb();
 
 console.log({ instanceId: env.INSTANCE_ID });
 
+app.use("/health", (req, res) => res.status(200).send("OK"));
 app.use("/api/personas", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {

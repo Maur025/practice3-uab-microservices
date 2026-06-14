@@ -5,6 +5,7 @@ const {
   DB_USER = "root",
   DB_PASSWORD = "password",
   DB_NAME = "sistema_supermercado_db",
+  INSTANCE_ID,
 } = process.env;
 
 export const env = {
@@ -14,4 +15,5 @@ export const env = {
   DB_USER: DB_USER,
   DB_PASSWORD: DB_PASSWORD,
   DB_NAME,
+  INSTANCE_ID,
 };

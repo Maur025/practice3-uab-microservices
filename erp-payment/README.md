@@ -25,6 +25,15 @@ pnpm test
 pnpm test:watch
 ```
 
+## Rutas expuestas
+
+```http
+GET /api/finanzas/cuentas-por-cobrar
+GET /api/finanzas/cuentas-por-pagar
+GET /api/finanzas/pagos-proveedores
+GET /api/finanzas/pagos-clientes
+```
+
 ## Variables de entorno
 
 | Archivo        | Descripcion                                                                                                            |

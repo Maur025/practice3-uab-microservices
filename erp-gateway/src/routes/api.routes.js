@@ -3,6 +3,6 @@ import { getBranches } from "../controllers/branch.controller.js";
 
 const apiRouter = Router();
 
-apiRouter.get("/branches", getBranches);
+apiRouter.get("/sucursales", getBranches);
 
 export { apiRouter };

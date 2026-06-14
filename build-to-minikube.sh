@@ -2,7 +2,7 @@
 set -e
 
 echo "Building Docker image for Minikube..."
-# eval $(minikube docker-env)
+eval $(minikube docker-env)
 
 cd erp-gateway/
 docker build -t gateway-service .

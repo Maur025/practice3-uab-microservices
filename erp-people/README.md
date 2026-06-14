@@ -29,9 +29,9 @@ pnpm test:watch
 ## Rutas expuestas
 
 ```http
-GET /api/people/clients
-GET /api/people/providers
-GET /api/people/employees
+GET /api/personas/clientes
+GET /api/personas/proveedores
+GET /api/personas/empleados
 ```
 
 ## Variables de entorno

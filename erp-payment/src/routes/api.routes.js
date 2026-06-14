@@ -6,9 +6,9 @@ import { getPendingPayments } from "../controllers/pending-payment.controller.js
 
 const apiRouter = Router();
 
-apiRouter.get("/incoming/pending", getPendingCollections);
-apiRouter.get("/outgoing/pending", getPendingPayments);
-apiRouter.get("/outgoing", getPayments);
-apiRouter.get("/incoming", getCollections);
+apiRouter.get("/cuentas-por-cobrar", getPendingCollections);
+apiRouter.get("/cuentas-por-pagar", getPendingPayments);
+apiRouter.get("/pagos-proveedores", getPayments);
+apiRouter.get("/pagos-clientes", getCollections);
 
 export { apiRouter };

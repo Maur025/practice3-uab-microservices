@@ -24,6 +24,12 @@ pnpm test
 pnpm test:watch
 ```
 
+## Rutas expuestas
+
+```http
+GET /api/organizaciones/sucursales
+```
+
 ## Variables de entorno
 
 | Archivo        | Descripcion                                                                                                        |

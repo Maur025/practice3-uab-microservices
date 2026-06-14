@@ -29,7 +29,7 @@ initializeDb();
 
 console.log({ instanceId: env.INSTANCE_ID });
 
-app.use("/api/people", apiRouter);
+app.use("/api/personas", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {
   loggerInfo(`[SERVER] Server is running on port ${env.SERVER_APP_PORT}`);

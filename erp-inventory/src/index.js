@@ -27,7 +27,7 @@ app.use(
 
 initializeDb();
 
-app.use("/api/inventories", apiRouter);
+app.use("/api/inventarios", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {
   loggerInfo(`[SERVER] Server is running on port ${env.SERVER_APP_PORT}`);

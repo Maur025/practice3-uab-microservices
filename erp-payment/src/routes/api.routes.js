@@ -8,15 +8,15 @@ import { getPendingPayments } from "../controllers/pending-payment.controller.js
 const apiRouter = Router();
 
 // Rutas para Cuentas por Cobrar (Deudas)
-apiRouter.post("/incoming/pending", createPendingCollection);
-apiRouter.get("/incoming/pending", getPendingCollections);
+apiRouter.get("/cuentas-por-cobrar", getPendingCollections);
+apiRouter.post("/cuentas-por-cobrar", createPendingCollection); // <-- Tu lógica POST integrada
 
 // Rutas para Pagos de Clientes (Cobros/Cuotas)
-apiRouter.post("/incoming", createCollection); // <-- Aquí es donde usamos el nuevo import
-apiRouter.get("/incoming", getCollections);
+apiRouter.get("/pagos-clientes", getCollections);
+apiRouter.post("/pagos-clientes", createCollection); // <-- Tu lógica POST integrada
 
 // Rutas de pagos a proveedores (De otros compañeros)
-apiRouter.get("/outgoing/pending", getPendingPayments);
-apiRouter.get("/outgoing", getPayments);
+apiRouter.get("/cuentas-por-pagar", getPendingPayments);
+apiRouter.get("/pagos-proveedores", getPayments);
 
 export { apiRouter };

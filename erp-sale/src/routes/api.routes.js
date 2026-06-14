@@ -3,9 +3,10 @@ import { getSales, createSale, getSale, updateSaleStatus } from "../controllers/
 
 const apiRouter = Router();
 
-apiRouter.get("", getSales);          // Ver todas las ventas (Para la tabla principal)
-apiRouter.post("", createSale);       // Crear venta nueva
-apiRouter.get("/:id", getSale);       // Ver detalle de una venta (Para el botón del "Ojo")
-apiRouter.put("/:id", updateSaleStatus); // Actualizar venta a ANULADA (Para el botón de "Lápiz/Anular")
+// Rutas para Ventas
+apiRouter.get("/ventas", getSales);               // Ver todas las ventas (Para la tabla principal)
+apiRouter.post("/ventas", createSale);            // Crear venta nueva
+apiRouter.get("/ventas/:id", getSale);            // Ver detalle de una venta (Para el botón del "Ojo")
+apiRouter.put("/ventas/:id", updateSaleStatus);   // Actualizar venta a ANULADA (Para el botón de "Lápiz/Anular")
 
 export { apiRouter };

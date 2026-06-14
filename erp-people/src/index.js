@@ -27,7 +27,10 @@ app.use(
 
 initializeDb();
 
-app.use("/api/people", apiRouter);
+console.log({ instanceId: env.INSTANCE_ID });
+
+app.use("/health", (req, res) => res.status(200).send("OK"));
+app.use("/api/personas", apiRouter);
 
 app.listen(env.SERVER_APP_PORT, () => {
   loggerInfo(`[SERVER] Server is running on port ${env.SERVER_APP_PORT}`);

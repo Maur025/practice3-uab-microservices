@@ -3,6 +3,6 @@ import { getProducts } from "../controllers/product.controller.js";
 
 const apiRouter = Router();
 
-apiRouter.get("/products", getProducts);
+apiRouter.get("/catalogo/productos", getProducts);
 
 export { apiRouter };

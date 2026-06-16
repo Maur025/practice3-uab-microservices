@@ -1,0 +1,71 @@
+erDiagram
+    SUCURSALES {
+        int id PK
+        string nombre
+        string direccion
+        string ciudad
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    CARGOS {
+        int id PK
+        string nombre
+        string descripcion
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    EMPLEADOS {
+        int id PK
+        int sucursal_id FK
+        int cargo_id FK
+        string nombres
+        string apellido_paterno
+        string apellido_materno
+        string numero_documento
+        string telefono
+        string correo_electronico
+        date fecha_ingreso
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    USUARIOS {
+        int id PK
+        int empleado_id FK
+        string nombre_usuario
+        string correo_electronico
+        string password_hash
+        string refresh_token_hash
+        datetime ultimo_acceso
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    ROLES {
+        int id PK
+        string nombre
+        string codigo
+        string descripcion
+        boolean activo
+        datetime created_at
+        datetime updated_at
+    }
+
+    USUARIO_ROLES {
+        int id PK
+        int usuario_id FK
+        int rol_id FK
+        datetime created_at
+    }
+
+    SUCURSALES ||--o{ EMPLEADOS : "tiene"
+    CARGOS ||--o{ EMPLEADOS : "asigna"
+    EMPLEADOS ||--o| USUARIOS : "tiene"
+    USUARIOS ||--o{ USUARIO_ROLES : "posee"
+    ROLES ||--o{ USUARIO_ROLES : "asignado"

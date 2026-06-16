@@ -1,0 +1,18 @@
+sequenceDiagram
+    participant C as Cliente
+    participant G as erp-gateway
+    participant P as erp-people
+    participant DB as MariaDB
+    participant JWT as JWT Service
+
+    C->>G: POST /api/auth/login<br/>{identifier, password}
+    G->>P: Axios POST /api/auth/login
+    P->>DB: SELECT usuario + roles
+    DB-->>P: Usuario encontrado
+    P->>P: bcrypt.compare(password)
+    P->>JWT: generateAccessToken()
+    P->>JWT: generateRefreshToken()
+    JWT-->>P: tokens
+    P->>DB: UPDATE refresh_token_hash
+    P-->>G: {accessToken, refreshToken, usuario}
+    G-->>C: 200 OK + tokens

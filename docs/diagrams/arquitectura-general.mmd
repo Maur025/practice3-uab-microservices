@@ -1,0 +1,21 @@
+flowchart TB
+    Cliente[Cliente / Frontend]
+    Gateway[erp-gateway<br/>:3000]
+    People[erp-people<br/>:3001]
+    DB[(mariadb-people<br/>:3307)]
+
+    Cliente -->|HTTP REST| Gateway
+    Gateway -->|Axios Proxy| People
+    People -->|Sequelize ORM| DB
+
+    subgraph Infraestructura Docker
+        Gateway
+        People
+        DB
+    end
+
+    subgraph Red erp-network
+        Gateway
+        People
+        DB
+    end

@@ -1,0 +1,5 @@
+containers/dumps
+
+node_modules/
+.env
+*.log

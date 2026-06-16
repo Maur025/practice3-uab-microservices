@@ -23,7 +23,8 @@
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "http-proxy-middleware": "^4.1.0",
-    "mysql2": "^3.22.5"
+    "mysql2": "^3.22.5",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -6,6 +6,7 @@ import cors from "cors";
 import { loggerInfo } from "@maur025/core-logger";
 import { apiRouter } from "./routes/api.routes.js";
 import { initializeDb } from "./db.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const app = express();
 app.use(compression());
@@ -31,6 +32,7 @@ console.log({ instanceId: env.INSTANCE_ID });
 
 app.use("/health", (req, res) => res.status(200).send("OK"));
 app.use("/api/personas", apiRouter);
+app.use(errorMiddleware);
 
 app.listen(env.SERVER_APP_PORT, () => {
   loggerInfo(`[SERVER] Server is running on port ${env.SERVER_APP_PORT}`);

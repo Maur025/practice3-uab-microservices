@@ -1,16 +1,31 @@
-import { loggerError } from "@maur025/core-logger";
-import { findAllEmployees } from "../services/employee.service.js";
+import empleadoService from "../services/empleado.service.js";
+import { asyncHandler, successResponse } from "../utils/response.js";
 
-export const getEmployees = async (req, res) => {
-  try {
-    const employees = await findAllEmployees();
-    res.status(200).json(employees);
-  } catch (error) {
-    console.log(error);
+class EmpleadoController {
+  getAll = asyncHandler(async (req, res) => {
+    const empleados = await empleadoService.getAll();
+    successResponse(res, empleados);
+  });
 
-    loggerError(
-      `[EMPLOYEE CONTROLLER] Error fetching employees: ${error.message}`,
-    );
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+  getById = asyncHandler(async (req, res) => {
+    const empleado = await empleadoService.getById(req.params.id);
+    successResponse(res, empleado);
+  });
+
+  create = asyncHandler(async (req, res) => {
+    const empleado = await empleadoService.create(req.body);
+    successResponse(res, empleado, 201, "Empleado creado");
+  });
+
+  update = asyncHandler(async (req, res) => {
+    const empleado = await empleadoService.update(req.params.id, req.body);
+    successResponse(res, empleado, 200, "Empleado actualizado");
+  });
+
+  remove = asyncHandler(async (req, res) => {
+    const empleado = await empleadoService.remove(req.params.id);
+    successResponse(res, empleado, 200, "Empleado desactivado");
+  });
+}
+
+export default new EmpleadoController();

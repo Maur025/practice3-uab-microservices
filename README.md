@@ -16,6 +16,19 @@ El repositorio está organizado por servicios y soporte de infraestructura:
 
 Cada servicio tiene su propio `package.json`, su configuración de lint y su ciclo de ejecución, lo que facilita trabajar de forma aislada en cada microservicio.
 
+## Swagger Documentation
+
+swagger expose in next endpoints
+
+| Route                                           | Description                |
+| ----------------------------------------------- | -------------------------- |
+| `http://localhost:7800/api/organizaciones/docs` | Organization documentation |
+| `http://localhost:7800/api/inventarios/docs`    | Inventory documentation    |
+| `http://localhost:7800/api/finanzas/docs`       | Payment documentation      |
+| `http://localhost:7800/api/personas/docs`       | People documentation       |
+| `http://localhost:7800/api/compras/docs`        | Purchase documentation     |
+| `http://localhost:7800/api/ventas/docs`         | Sale documentation         |
+
 ## Puertos por modulo
 
 | Modulo          | Puerto |

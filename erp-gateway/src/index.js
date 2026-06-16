@@ -3,11 +3,15 @@ import { env } from "./env.js";
 import express from "express";
 import compression from "compression";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
 import { loggerInfo } from "@maur025/core-logger";
 import { apiRouter } from "./routes/api.routes.js";
 import { initializeDb } from "./db.js";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { configServices } from "./config-services.js";
+import { openApiSpec } from "./swagger.js";
+
+const apiPrefix = "/api/organizaciones";
 
 const app = express();
 app.use(compression());
@@ -29,7 +33,9 @@ app.use(
 
 initializeDb();
 
-app.use("/api/organizaciones", apiRouter);
+app.get(`${apiPrefix}/openapi.json`, (req, res) => res.json(openApiSpec));
+app.use(`${apiPrefix}/docs`, swaggerUi.serve, swaggerUi.setup(openApiSpec));
+app.use(apiPrefix, apiRouter);
 
 Object.entries(configServices).forEach(([path, target]) => {
   app.use(

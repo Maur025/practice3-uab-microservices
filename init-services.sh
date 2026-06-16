@@ -4,32 +4,44 @@ set -e
 echo "Installing project dependencies..."
 
 cd erp-gateway/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 cd ..
 cd erp-inventory/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 cd ..
 cd erp-payment/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 cd ..
 cd erp-people/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 cd ..
 cd erp-purchase/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 cd ..
 cd erp-sale/
-cp .env.example .env
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
 pnpm install
 
 echo "Project dependencies installed successfully."

@@ -1,16 +1,33 @@
-import { loggerError } from "@maur025/core-logger";
-import { findAllClients } from "../services/client.service.js";
+import {
+  createClient as createClientService,
+  deleteClient as deleteClientService,
+  findAllClients,
+  findClientById,
+  updateClient as updateClientService,
+} from "../services/client.service.js";
+import { asyncHandler, successResponse } from "../utils/response.js";
 
-export const getClients = async (req, res) => {
-  try {
-    const clients = await findAllClients();
-    res.status(200).json(clients);
-  } catch (error) {
-    console.log(error);
+export const getClients = asyncHandler(async (req, res) => {
+  const clients = await findAllClients();
+  successResponse(res, clients);
+});
 
-    loggerError(
-      `[CLIENTS CONTROLLER] Error fetching clients: ${error.message}`,
-    );
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+export const getClientById = asyncHandler(async (req, res) => {
+  const client = await findClientById(req.params.id);
+  successResponse(res, client);
+});
+
+export const createClient = asyncHandler(async (req, res) => {
+  const client = await createClientService(req.body);
+  successResponse(res, client, 201, "Cliente creado");
+});
+
+export const updateClient = asyncHandler(async (req, res) => {
+  const client = await updateClientService(req.params.id, req.body);
+  successResponse(res, client, 200, "Cliente actualizado");
+});
+
+export const deleteClient = asyncHandler(async (req, res) => {
+  const client = await deleteClientService(req.params.id);
+  successResponse(res, client, 200, "Cliente desactivado");
+});

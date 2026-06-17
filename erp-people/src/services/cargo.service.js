@@ -2,11 +2,19 @@ import { db } from "../db.js";
 import { AppError } from "../utils/response.js";
 
 class CargoService {
-  async getAll() {
+  async getAll({ limit, offset } = {}) {
+    const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM cargo");
+    if (limit != null && offset != null) {
+      const [rows] = await db.query(
+        "SELECT id_cargo, nombre FROM cargo ORDER BY id_cargo DESC LIMIT ? OFFSET ?",
+        [limit, offset],
+      );
+      return { rows, count };
+    }
     const [rows] = await db.query(
       "SELECT id_cargo, nombre FROM cargo ORDER BY id_cargo DESC",
     );
-    return rows;
+    return { rows, count };
   }
 
   async getById(id) {

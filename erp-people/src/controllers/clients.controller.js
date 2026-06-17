@@ -6,10 +6,13 @@ import {
   updateClient as updateClientService,
 } from "../services/client.service.js";
 import { asyncHandler, successResponse } from "../utils/response.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export const getClients = asyncHandler(async (req, res) => {
-  const clients = await findAllClients();
-  successResponse(res, clients);
+  const { page, limit, offset } = getPagination(req.query);
+  const { rows, count } = await findAllClients({ limit, offset });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
 });
 
 export const getClientById = asyncHandler(async (req, res) => {

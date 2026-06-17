@@ -1,16 +1,10 @@
-import { loggerError } from "@maur025/core-logger";
+import { asyncHandler, successResponse } from "../util/response.js";
+import { getPagination, getPaginationMeta } from "../util/pagination.js";
 import { findAllBranches } from "../services/branch.service.js";
 
-export const getBranches = async (req, res) => {
-  try {
-    const branches = await findAllBranches();
-    res.status(200).json(branches);
-  } catch (error) {
-    console.log(error);
-
-    loggerError(
-      `[BRANCHES CONTROLLER] Error fetching branches: ${error.message}`,
-    );
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+export const getBranches = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = getPagination(req.query);
+  const { rows, count } = await findAllBranches({ limit, offset });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
+});

@@ -94,11 +94,19 @@ const ensureCargoExists = async (idCargo) => {
 };
 
 class EmpleadoService {
-  async getAll() {
+  async getAll({ limit, offset } = {}) {
+    const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM empleado");
+    if (limit != null && offset != null) {
+      const [rows] = await db.query(
+        `${employeeSelect} ORDER BY e.id_empleado DESC LIMIT ? OFFSET ?`,
+        [limit, offset],
+      );
+      return { rows, count };
+    }
     const [rows] = await db.query(
       `${employeeSelect} ORDER BY e.id_empleado DESC`,
     );
-    return rows;
+    return { rows, count };
   }
 
   async getById(id) {

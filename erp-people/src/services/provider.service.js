@@ -42,9 +42,14 @@ const fetchProviderById = async (id) => {
   return rows[0] ?? null;
 };
 
-export const findAllProviders = async () => {
+export const findAllProviders = async ({ limit, offset } = {}) => {
+  const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM proveedor");
+  if (limit != null && offset != null) {
+    const [rows] = await db.query(`${providerSelect} ORDER BY id_proveedor DESC LIMIT ? OFFSET ?`, [limit, offset]);
+    return { rows, count };
+  }
   const [rows] = await db.query(`${providerSelect} ORDER BY id_proveedor DESC`);
-  return rows;
+  return { rows, count };
 };
 
 export const findProviderById = async (id) => fetchProviderById(id);

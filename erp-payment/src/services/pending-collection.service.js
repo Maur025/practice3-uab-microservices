@@ -1,8 +1,13 @@
 import { db } from "../db.js";
 
-export const findAllPendingCollections = async () => {
+export const findAllPendingCollections = async ({ limit, offset } = {}) => {
+  const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM cuenta_por_cobrar");
+  if (limit != null && offset != null) {
+    const [rows] = await db.query("SELECT * FROM cuenta_por_cobrar LIMIT ? OFFSET ?", [limit, offset]);
+    return { rows, count };
+  }
   const [rows] = await db.query("SELECT * FROM cuenta_por_cobrar");
-  return rows;
+  return { rows, count };
 };
 
 // Nuestra nueva función para registrar la cuenta por cobrar

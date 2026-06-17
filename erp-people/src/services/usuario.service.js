@@ -57,9 +57,14 @@ const ensureEmployeeExists = async (employeeId) => {
 };
 
 class UsuarioService {
-  async getAll() {
+  async getAll({ limit, offset } = {}) {
+    const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM usuario");
+    if (limit != null && offset != null) {
+      const [rows] = await db.query(`${userSelect} ORDER BY u.id_usuario DESC LIMIT ? OFFSET ?`, [limit, offset]);
+      return { rows, count };
+    }
     const [rows] = await db.query(`${userSelect} ORDER BY u.id_usuario DESC`);
-    return rows;
+    return { rows, count };
   }
 
   async getById(id) {

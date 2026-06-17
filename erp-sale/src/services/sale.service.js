@@ -1,8 +1,14 @@
 import { db } from "../db.js";
+import { AppError } from "../util/response.js";
 
-export const findAllSales = async () => {
-  const [rows] = await db.query("SELECT * FROM venta");
-  return rows;
+export const findAllSales = async ({ limit, offset } = {}) => {
+  const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM venta");
+  if (limit != null && offset != null) {
+    const [rows] = await db.query("SELECT * FROM venta ORDER BY id_venta DESC LIMIT ? OFFSET ?", [limit, offset]);
+    return { rows, count };
+  }
+  const [rows] = await db.query("SELECT * FROM venta ORDER BY id_venta DESC");
+  return { rows, count };
 };
 
 // Nuestra función para registrar ventas (con prevención de Deadlocks e Impuestos)
@@ -13,7 +19,7 @@ export const registerSale = async (saleData) => {
   } = saleData;
 
   if (!carrito || !Array.isArray(carrito) || carrito.length === 0) {
-    throw new Error("El carrito de compras es requerido y no puede estar vacío.");
+    throw new AppError("El carrito de compras es requerido y no puede estar vacío.", 400);
   }
 
   const connection = await db.getConnection();
@@ -89,7 +95,7 @@ export const registerSale = async (saleData) => {
       if (!id_cliente) {
         await db.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
-        throw new Error('El cliente es obligatorio para ventas a crédito');
+        throw new AppError('El cliente es obligatorio para ventas a crédito', 400);
       }
       
       const cxcReq = await fetch('http://localhost:7805/api/payments/incoming/pending', {
@@ -103,7 +109,7 @@ export const registerSale = async (saleData) => {
         await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         
         const errData = await cxcReq.json().catch(() => ({}));
-        throw new Error(`Finanzas rechazó la operación. Venta ANULADA por seguridad. Motivo: ${errData.error || 'Error de conexión'}`);
+        throw new AppError(`Finanzas rechazó la operación. Venta ANULADA por seguridad. Motivo: ${errData.error || 'Error de conexión'}`, 500);
       }
     }
 
@@ -123,7 +129,7 @@ export const findSaleById = async (id) => {
   const [ventas] = await db.query("SELECT * FROM venta WHERE id_venta = ?", [id]);
   
   if (ventas.length === 0) {
-    throw new Error("Venta no encontrada");
+    throw new AppError("Venta no encontrada", 404);
   }
 
   const venta = ventas[0];

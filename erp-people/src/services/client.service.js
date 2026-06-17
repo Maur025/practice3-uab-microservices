@@ -43,9 +43,14 @@ const fetchClientById = async (id) => {
   return rows[0] ?? null;
 };
 
-export const findAllClients = async () => {
+export const findAllClients = async ({ limit, offset } = {}) => {
+  const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM cliente");
+  if (limit != null && offset != null) {
+    const [rows] = await db.query(`${clientSelect} ORDER BY id_cliente DESC LIMIT ? OFFSET ?`, [limit, offset]);
+    return { rows, count };
+  }
   const [rows] = await db.query(`${clientSelect} ORDER BY id_cliente DESC`);
-  return rows;
+  return { rows, count };
 };
 
 export const findClientById = async (id) => fetchClientById(id);

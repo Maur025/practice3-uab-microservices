@@ -3,10 +3,14 @@ import { env } from "./env.js";
 import express from "express";
 import compression from "compression";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
 import { loggerInfo } from "@maur025/core-logger";
-import { createProxyMiddleware } from "http-proxy-middleware";
-import { configServices } from "./config-services.js";
+import { apiRouter } from "./routes/api.routes.js";
+import { initializeDb } from "./db.js";
+import { openApiSpec } from "./swagger.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+
+const apiPrefix = "/api/organizaciones";
 
 const app = express();
 app.use(compression());
@@ -26,25 +30,11 @@ app.use(
   }),
 );
 
-Object.entries(configServices).forEach(([path, target]) => {
-  app.use(
-    path,
-    createProxyMiddleware({
-      target,
-      changeOrigin: true,
-      pathRewrite: async (pathStr, req) => req.originalUrl,
-      on: {
-        proxyReq: (proxyReq) => {
-          const host = proxyReq.getHeader("host");
-          const finalPath = proxyReq.path;
+initializeDb();
 
-          loggerInfo(`[PROXY] redirecting to -> http://${host}${finalPath}`);
-        },
-      },
-    }),
-  );
-});
-
+app.get(`${apiPrefix}/openapi.json`, (req, res) => res.json(openApiSpec));
+app.use(`${apiPrefix}/docs`, swaggerUi.serve, swaggerUi.setup(openApiSpec));
+app.use(apiPrefix, apiRouter);
 app.use(errorMiddleware);
 
 app.listen(env.SERVER_APP_PORT, () => {

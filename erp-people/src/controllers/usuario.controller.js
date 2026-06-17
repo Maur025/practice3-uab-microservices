@@ -1,10 +1,13 @@
 import usuarioService from "../services/usuario.service.js";
 import { asyncHandler, successResponse } from "../utils/response.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 class UsuarioController {
   getAll = asyncHandler(async (req, res) => {
-    const usuarios = await usuarioService.getAll();
-    successResponse(res, usuarios);
+    const { page, limit, offset } = getPagination(req.query);
+    const { rows, count } = await usuarioService.getAll({ limit, offset });
+    const pagination = getPaginationMeta(count, page, limit);
+    successResponse(res, rows, 200, "OK", pagination);
   });
 
   getById = asyncHandler(async (req, res) => {

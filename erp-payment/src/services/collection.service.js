@@ -1,8 +1,14 @@
 import { db } from "../db.js";
+import { AppError } from "../util/response.js";
 
-export const findAllCollections = async () => {
+export const findAllCollections = async ({ limit, offset } = {}) => {
+  const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM pago_cliente");
+  if (limit != null && offset != null) {
+    const [rows] = await db.query("SELECT * FROM pago_cliente LIMIT ? OFFSET ?", [limit, offset]);
+    return { rows, count };
+  }
   const [rows] = await db.query("SELECT * FROM pago_cliente");
-  return rows;
+  return { rows, count };
 };
 
 // Nuestra nueva función para registrar un pago/cuota
@@ -10,7 +16,7 @@ export const registerCollection = async (paymentData) => {
   const { id_cxc, monto, metodo_pago, observacion } = paymentData;
 
   if (!id_cxc || !monto || monto <= 0) {
-    throw new Error("El ID de la cuenta y un monto mayor a 0 son obligatorios.");
+    throw new AppError("El ID de la cuenta y un monto mayor a 0 son obligatorios.", 400);
   }
 
   const connection = await db.getConnection();
@@ -24,16 +30,16 @@ export const registerCollection = async (paymentData) => {
       [id_cxc]
     );
 
-    if (cuentas.length === 0) throw new Error("Cuenta por cobrar no encontrada");
+    if (cuentas.length === 0) throw new AppError("Cuenta por cobrar no encontrada", 404);
 
     const cuenta = cuentas[0];
 
     // 2. Validaciones de negocio
     if (cuenta.estado === 'PAGADA') {
-      throw new Error("Esta cuenta ya está totalmente pagada.");
+      throw new AppError("Esta cuenta ya está totalmente pagada.", 400);
     }
     if (monto > cuenta.saldo) {
-      throw new Error(`El monto a pagar (${monto}) supera el saldo deudor actual (${cuenta.saldo}).`);
+      throw new AppError(`El monto a pagar (${monto}) supera el saldo deudor actual (${cuenta.saldo}).`, 400);
     }
 
     // 3. Insertar el recibo del pago

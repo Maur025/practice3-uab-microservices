@@ -1,16 +1,10 @@
-import { loggerError } from "@maur025/core-logger";
+import { asyncHandler, successResponse } from "../util/response.js";
+import { getPagination, getPaginationMeta } from "../util/pagination.js";
 import { findAllPayments } from "../services/payment.service.js";
 
-export const getPayments = async (req, res) => {
-  try {
-    const payments = await findAllPayments();
-    res.status(200).json(payments);
-  } catch (error) {
-    console.log(error);
-
-    loggerError(
-      `[PAYMENTS CONTROLLER] Error fetching payments: ${error.message}`,
-    );
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+export const getPayments = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = getPagination(req.query);
+  const { rows, count } = await findAllPayments({ limit, offset });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
+});

@@ -6,10 +6,13 @@ import {
   updateProvider as updateProviderService,
 } from "../services/provider.service.js";
 import { asyncHandler, successResponse } from "../utils/response.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export const getProviders = asyncHandler(async (req, res) => {
-  const providers = await findAllProviders();
-  successResponse(res, providers);
+  const { page, limit, offset } = getPagination(req.query);
+  const { rows, count } = await findAllProviders({ limit, offset });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
 });
 
 export const getProviderById = asyncHandler(async (req, res) => {

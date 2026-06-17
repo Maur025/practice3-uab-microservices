@@ -1,5 +1,5 @@
 import { loggerError } from "@maur025/core-logger";
-import { AppError } from "../utils/response.js";
+import { AppError } from "../util/response.js";
 
 export const errorMiddleware = (error, req, res, next) => {
   void next;

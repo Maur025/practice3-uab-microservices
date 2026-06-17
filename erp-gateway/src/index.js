@@ -10,6 +10,7 @@ import { initializeDb } from "./db.js";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import { configServices } from "./config-services.js";
 import { openApiSpec } from "./swagger.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
 
 const apiPrefix = "/api/organizaciones";
 
@@ -36,6 +37,7 @@ initializeDb();
 app.get(`${apiPrefix}/openapi.json`, (req, res) => res.json(openApiSpec));
 app.use(`${apiPrefix}/docs`, swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.use(apiPrefix, apiRouter);
+app.use(errorMiddleware);
 
 Object.entries(configServices).forEach(([path, target]) => {
   app.use(

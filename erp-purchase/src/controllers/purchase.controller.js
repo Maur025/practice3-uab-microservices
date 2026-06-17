@@ -1,16 +1,10 @@
-import { loggerError } from "@maur025/core-logger";
+import { asyncHandler, successResponse } from "../util/response.js";
+import { getPagination, getPaginationMeta } from "../util/pagination.js";
 import { findAllPurchases } from "../services/purchase.service.js";
 
-export const getPurchases = async (req, res) => {
-  try {
-    const purchases = await findAllPurchases();
-    res.status(200).json(purchases);
-  } catch (error) {
-    console.log(error);
-
-    loggerError(
-      `[PURCHASES CONTROLLER] Error fetching purchases: ${error.message}`,
-    );
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-};
+export const getPurchases = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = getPagination(req.query);
+  const { rows, count } = await findAllPurchases({ limit, offset });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
+});

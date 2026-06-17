@@ -1,10 +1,13 @@
 import empleadoService from "../services/empleado.service.js";
 import { asyncHandler, successResponse } from "../utils/response.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 class EmpleadoController {
   getAll = asyncHandler(async (req, res) => {
-    const empleados = await empleadoService.getAll();
-    successResponse(res, empleados);
+    const { page, limit, offset } = getPagination(req.query);
+    const { rows, count } = await empleadoService.getAll({ limit, offset });
+    const pagination = getPaginationMeta(count, page, limit);
+    successResponse(res, rows, 200, "OK", pagination);
   });
 
   getById = asyncHandler(async (req, res) => {

@@ -512,6 +512,7 @@ CREATE TABLE `producto` (
   `nombre` varchar(150) NOT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   `precio_venta` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `costo` decimal(10,2) DEFAULT NULL,
   `estado` tinyint(4) DEFAULT '1',
   PRIMARY KEY (`id_producto`),
   UNIQUE KEY `codigo` (`codigo`),
@@ -528,7 +529,7 @@ CREATE TABLE `producto` (
 
 LOCK TABLES `producto` WRITE;
 /*!40000 ALTER TABLE `producto` DISABLE KEYS */;
-INSERT INTO `producto` VALUES (1,1,1,'COCA600','Coca Cola 600ml','Botella 600ml',8.00,1),(2,1,1,'COCA2L','Coca Cola 2L','Botella 2 litros',15.00,1),(3,2,1,'PAN001','Pan Corriente','Pan tradicional',0.50,1),(4,3,5,'ARROZ1K','Arroz 1kg','Bolsa arroz 1kg',12.00,1),(5,4,1,'LECHE1L','Leche PIL 1L','Leche entera',8.50,1),(6,3,5,'AZUCAR1K','Azucar 1kg','Bolsa azucar 1kg',9.00,1),(7,5,1,'JABON01','Jabon de ropa','Jabon lavanderia',5.00,1),(8,1,1,'PEPSI600','Pepsi 600ml','Botella 600ml',7.50,1),(9,4,1,'YOGUR01','Yogurt PIL','Yogurt frutilla',6.00,1),(10,3,5,'FIDEO01','Fideo 1kg','Paquete fideo',10.00,1);
+INSERT INTO `producto` VALUES (1,1,1,'COCA600','Coca Cola 600ml','Botella 600ml',8.00,8.00,1),(2,1,1,'COCA2L','Coca Cola 2L','Botella 2 litros',15.00,15.00,1),(3,2,1,'PAN001','Pan Corriente','Pan tradicional',0.50,0.50,1),(4,3,5,'ARROZ1K','Arroz 1kg','Bolsa arroz 1kg',12.00,12.00,1),(5,4,1,'LECHE1L','Leche PIL 1L','Leche entera',8.50,8.50,1),(6,3,5,'AZUCAR1K','Azucar 1kg','Bolsa azucar 1kg',9.00,9.00,1),(7,5,1,'JABON01','Jabon de ropa','Jabon lavanderia',5.00,5.00,1),(8,1,1,'PEPSI600','Pepsi 600ml','Botella 600ml',7.50,7.50,1),(9,4,1,'YOGUR01','Yogurt PIL','Yogurt frutilla',6.00,6.00,1),(10,3,5,'FIDEO01','Fideo 1kg','Paquete fideo',10.00,10.00,1);
 /*!40000 ALTER TABLE `producto` ENABLE KEYS */;
 UNLOCK TABLES;
 

@@ -1,12 +1,29 @@
 import { Router } from "express";
-import { getSales, createSale, getSale, updateSaleStatus } from "../controllers/sale.controller.js";
+import {
+  getSales, createSale, getSale, updateSaleStatus,
+  getInvoicePdf, getRevenue, getCustomerFidelity, getTopCustomersList,
+} from "../controllers/sale.controller.js";
+import {
+  createSaleValidator, updateStatusValidator, idParamValidator, dateRangeValidator,
+} from "../validators/index.js";
+import { validationResultMiddleware } from "../util/response.js";
 
 const apiRouter = Router();
 
-// Rutas para Ventas
-apiRouter.get("/ventas", getSales);               // Ver todas las ventas (Para la tabla principal)
-apiRouter.post("/ventas", createSale);            // Crear venta nueva
-apiRouter.get("/ventas/:id", getSale);            // Ver detalle de una venta (Para el botón del "Ojo")
-apiRouter.put("/ventas/:id", updateSaleStatus);   // Actualizar venta a ANULADA (Para el botón de "Lápiz/Anular")
+apiRouter.get("/ventas", getSales);
+
+apiRouter.post("/ventas", createSaleValidator, validationResultMiddleware, createSale);
+
+apiRouter.get("/ventas/:id", idParamValidator, validationResultMiddleware, getSale);
+
+apiRouter.put("/ventas/:id", idParamValidator, updateStatusValidator, validationResultMiddleware, updateSaleStatus);
+
+apiRouter.get("/ventas/facturas/:id/pdf", idParamValidator, validationResultMiddleware, getInvoicePdf);
+
+apiRouter.get("/ventas/reportes/ingresos", dateRangeValidator, validationResultMiddleware, getRevenue);
+
+apiRouter.get("/ventas/clientes/top", getTopCustomersList);
+
+apiRouter.get("/ventas/clientes/:id/fidelizacion", idParamValidator, validationResultMiddleware, getCustomerFidelity);
 
 export { apiRouter };

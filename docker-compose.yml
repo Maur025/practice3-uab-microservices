@@ -1,0 +1,114 @@
+services:
+
+  market-system-db:
+    image: mariadb:11.8.6
+    container_name: market-system-db
+    ports:
+      - "3306:3306"
+    volumes:
+      - market-system-db:/var/lib/mysql
+      - ./containers/mariadb/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ./containers/mariadb/dumps:/dumps
+    networks:
+      - compose-net
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root123456
+
+  uab-company:
+    build: ./erp-company
+    container_name: uab-company
+    ports:
+      - "7806:7806"
+    env_file:
+      - ./erp-company/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-inventory:
+    build: ./erp-inventory
+    container_name: uab-inventory
+    ports:
+      - "7803:7803"
+    env_file:
+      - ./erp-inventory/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-payment:
+    build: ./erp-payment
+    container_name: uab-payment
+    ports:
+      - "7805:7805"
+    env_file:
+      - ./erp-payment/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-people:
+    build: ./erp-people
+    container_name: uab-people
+    ports:
+      - "7802:7802"
+    env_file:
+      - ./erp-people/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-purchase:
+    build: ./erp-purchase
+    container_name: uab-purchase
+    ports:
+      - "7801:7801"
+    env_file:
+      - ./erp-purchase/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-sale:
+    build: ./erp-sale
+    container_name: uab-sale
+    ports:
+      - "7804:7804"
+    env_file:
+      - ./erp-sale/.env
+    networks:
+      - compose-net
+    depends_on:
+      - market-system-db
+
+  uab-gateway:
+    build: ./erp-gateway
+    container_name: uab-gateway
+    ports:
+      - "7800:7800"
+    env_file:
+      - ./erp-gateway/.env
+    depends_on:
+      - uab-company
+      - uab-inventory
+      - uab-payment
+      - uab-people
+      - uab-purchase
+      - uab-sale
+      - market-system-db
+    networks:
+      - compose-net
+
+volumes:
+  market-system-db:
+    name: market-system-db
+
+networks:
+  compose-net:
+    external: true

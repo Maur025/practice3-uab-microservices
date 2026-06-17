@@ -562,6 +562,36 @@ INSERT INTO `proveedor` VALUES (1,'Distribuidora Coca Cola','100100','73000001',
 UNLOCK TABLES;
 
 --
+-- Table structure for table `empresa`
+--
+
+DROP TABLE IF EXISTS `empresa`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `empresa` (
+  `id_empresa` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `nit` varchar(30) NOT NULL,
+  `direccion` varchar(150) DEFAULT NULL,
+  `telefono` varchar(30) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `estado` tinyint(4) DEFAULT '1',
+  PRIMARY KEY (`id_empresa`),
+  UNIQUE KEY `nit` (`nit`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `empresa`
+--
+
+LOCK TABLES `empresa` WRITE;
+/*!40000 ALTER TABLE `empresa` DISABLE KEYS */;
+INSERT INTO `empresa` VALUES (1,'Supermercado Central','100000001','Av Principal #100','70000000','contacto@supercentral.com',1);
+/*!40000 ALTER TABLE `empresa` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sucursal`
 --
 
@@ -570,11 +600,14 @@ DROP TABLE IF EXISTS `sucursal`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sucursal` (
   `id_sucursal` int(11) NOT NULL AUTO_INCREMENT,
+  `id_empresa` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `direccion` varchar(150) DEFAULT NULL,
   `ciudad` varchar(100) DEFAULT NULL,
   `estado` tinyint(4) DEFAULT '1',
-  PRIMARY KEY (`id_sucursal`)
+  PRIMARY KEY (`id_sucursal`),
+  KEY `fk_sucursal_empresa` (`id_empresa`),
+  CONSTRAINT `fk_sucursal_empresa` FOREIGN KEY (`id_empresa`) REFERENCES `empresa` (`id_empresa`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -584,7 +617,7 @@ CREATE TABLE `sucursal` (
 
 LOCK TABLES `sucursal` WRITE;
 /*!40000 ALTER TABLE `sucursal` DISABLE KEYS */;
-INSERT INTO `sucursal` VALUES (1,'Sucursal Cochabamba','Av America #123','Cochabamba',1),(2,'Sucursal Santa Cruz','Av Banzer #456','Santa Cruz',1),(3,'Sucursal La Paz','Av Camacho #789','La Paz',1);
+INSERT INTO `sucursal` VALUES (1,1,'Sucursal Cochabamba','Av America #123','Cochabamba',1),(2,1,'Sucursal Santa Cruz','Av Banzer #456','Santa Cruz',1),(3,1,'Sucursal La Paz','Av Camacho #789','La Paz',1);
 /*!40000 ALTER TABLE `sucursal` ENABLE KEYS */;
 UNLOCK TABLES;
 

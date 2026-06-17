@@ -9,6 +9,11 @@ docker build -t gateway-service .
 
 cd ..
 
+cd erp-company/
+docker build -t company-service .
+
+cd ..
+
 cd erp-people/
 docker build -t people-service .
 

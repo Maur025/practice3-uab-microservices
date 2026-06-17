@@ -1,6 +1,7 @@
 const { SERVER_REDIRECTION = "DEV" } = process.env;
 
 const devServices = {
+  "/api/organizaciones": "http://localhost:7806",
   "/api/compras": "http://localhost:7801",
   "/api/personas": "http://localhost:7802",
   "/api/inventarios": "http://localhost:7803",
@@ -9,6 +10,7 @@ const devServices = {
 };
 
 const prodServices = {
+  "/api/organizaciones": "http://company-service:80",
   "/api/compras": "http://purchase-service:80",
   "/api/personas": "http://people-service:80",
   "/api/inventarios": "http://inventory-service:80",

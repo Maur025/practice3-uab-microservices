@@ -10,6 +10,13 @@ fi
 pnpm install
 
 cd ..
+cd erp-company/
+if [ ! -f .env ]; then
+  cp .env.example .env
+fi
+pnpm install
+
+cd ..
 cd erp-inventory/
 if [ ! -f .env ]; then
   cp .env.example .env

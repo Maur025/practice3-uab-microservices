@@ -1,5 +1,5 @@
 const {
-  SERVER_APP_PORT = "7805",
+  SERVER_APP_PORT = "7806",
   DB_HOST = "localhost",
   DB_PORT = "3306",
   DB_USER = "root",

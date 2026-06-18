@@ -1,5 +1,42 @@
 # ERP Supermercado — Microservicios (Backend)
 
+## Checklist de Requisitos
+
+### Backend (Microservicios)
+
+- [x] **1. Módulo Empresa (erp-company)** — CRUD completo de empresas y sucursales con validaciones, paginación, Swagger, y respuesta estandarizada.
+- [x] **2. Módulo Inventarios (erp-inventory)** — CRUD completo de categorías, unidades de medida, productos (con campo costo), gestión de stock por sucursal, movimientos de inventario, inicialización de stocks, transferencia entre sucursales, reporte de stock por empresa. Validaciones con express-validator, paginación, Swagger.
+- [x] **3. Módulo Personas (erp-people)** — CRUD completo de clientes, proveedores, cargos, empleados y usuarios con validaciones y paginación.
+- [x] **4. Módulo Ventas (erp-sale)** — Creación de venta con transacción, descuento de stock integrado, generación de PDF de factura (vía pdfkit), estadísticas de fidelización de clientes, reporte de ingresos, validaciones con express-validator, Swagger completo. Lint pasa limpio.
+- [ ] **5. Módulo Compras (erp-purchase)** — Solo existe GET `/compras`. Faltan: CRUD completo con transacciones, integración con inventario (entrada de stock), integración con pagos (CxP).
+- [ ] **6. Módulo Pagos (erp-payment)** — CxC y pagos de clientes funcionando con FOR UPDATE. Faltan: CxP (creación y pago a proveedores).
+- [x] **7. API Gateway (erp-gateway)** — Proxy funcionando con empresa movida a erp-company (puerto 7806). Sin lógica de negocio interna.
+- [x] **8. Reportes de ingresos (req. 10)** — Endpoint GET `/ventas/reportes/ingresos` con filtros por fecha, rango y sucursal. Integrado en erp-sale.
+- [x] **9. Respuesta estandarizada** — Patrón `{ code, data, message, pagination }` implementado en todos los servicios.
+- [x] **10. Validaciones con express-validator** — Implementadas en erp-company, erp-people, erp-inventory y erp-sale. Faltan en erp-purchase, erp-payment.
+- [x] **11. PDF de factura (req. 7)** — GET `/ventas/facturas/:id/pdf` retorna PDF con datos de factura + detalle_factura, content-type: pdf.
+- [x] **12. Inicialización de stocks (req. 4)** — Implementado en POST `/stock/inicializar`.
+- [x] **13. Transferencia de stocks (req. 5)** — Implementado en POST `/stock/transferir`.
+- [x] **14. Estadísticas de fidelización (req. 8)** — Endpoints: GET `/ventas/clientes/:id/fidelizacion` (frecuencia, sucursal preferida, producto más consumido) y GET `/ventas/clientes/top` (top compradores).
+- [x] **15. Base de datos** — Schema SQL completo con todas las tablas necesarias (empresa, sucursal, producto, inventario, movimiento_inventario, venta, factura, etc.).
+
+### Frontend (Angular)
+
+- [x] **1. Estructura general** — Aplicación Angular 17 standalone con routing lazy, Material Design, layout responsive con sidebar y toolbar.
+- [x] **2. Componente genérico EntityCrud** — CRUD genérico configurable para 22 entidades con campos dinámicos, relaciones, tabs.
+- [x] **3. Formularios especializados** — CompraFormComponent y VentaFormComponent con líneas dinámicas, auto-cálculos, integración mock.
+- [x] **4. Dashboard** — 6 tarjetas KPI con datos simulados.
+- [x] **5. Capa de datos mock** — MockDatabase con 17 tablas y lógica de negocio simulada (stock, factura, CxC, CxP).
+- [x] **6. Modelos TypeScript** — 21 interfaces definidas para todas las entidades.
+- [x] **7. Configuración de entidades** — EntityConfig con metadatos completos para cada entidad.
+- [ ] **8. Autenticación/Autorización** — `auth.guard.ts` es un stub que siempre retorna true. No hay login ni JWT.
+- [ ] **9. Integración real con API** — Todo funciona con mock data (`useMockData: true`). Los endpoints HTTP están definidos pero nunca se llaman en producción.
+- [ ] **10. PDF de factura (frontend)** — No hay componente para visualizar/imprimir facturas en PDF.
+- [ ] **11. UI de pagos** — No hay UI especializada para registrar pagos parciales contra CxC/CxP.
+- [ ] **12. Reportes** — No hay componentes de reportes (stock por empresa, ingresos diarios).
+- [ ] **13. Feedback al usuario** — No hay snackbar/toast después de operaciones exitosas.
+- [ ] **14. Testing** — Solo el test por defecto de `app.component.spec.ts` que está desactualizado.
+
 ## Arquitectura
 
 Monorepo con 6 microservicios Node.js + Express 5 que comparten una misma base de datos MariaDB.

@@ -4,18 +4,30 @@ import { AppError } from "../util/response.js";
 export const findAllSales = async ({ limit, offset } = {}) => {
   const [[{ count }]] = await db.query("SELECT COUNT(*) as count FROM venta");
   if (limit != null && offset != null) {
-    const [rows] = await db.query("SELECT * FROM venta ORDER BY id_venta DESC LIMIT ? OFFSET ?", [limit, offset]);
+    const [rows] = await db.query(
+      `SELECT v.*, s.nombre as sucursal_nombre, u.username as usuario_nombre
+       FROM venta v
+       JOIN sucursal s ON v.id_sucursal = s.id_sucursal
+       JOIN usuario u ON v.id_usuario = u.id_usuario
+       ORDER BY v.id_venta DESC LIMIT ? OFFSET ?`,
+      [limit, offset],
+    );
     return { rows, count };
   }
-  const [rows] = await db.query("SELECT * FROM venta ORDER BY id_venta DESC");
+  const [rows] = await db.query(
+    `SELECT v.*, s.nombre as sucursal_nombre, u.username as usuario_nombre
+     FROM venta v
+     JOIN sucursal s ON v.id_sucursal = s.id_sucursal
+     JOIN usuario u ON v.id_usuario = u.id_usuario
+     ORDER BY v.id_venta DESC`,
+  );
   return { rows, count };
 };
 
-// Nuestra función para registrar ventas (con prevención de Deadlocks e Impuestos)
 export const registerSale = async (saleData) => {
   const {
     id_cliente, id_sucursal, id_usuario, tipo_pago, descuento = 0,
-    nit_cliente, razon_social_cliente, carrito
+    nit_cliente, razon_social_cliente, carrito,
   } = saleData;
 
   if (!carrito || !Array.isArray(carrito) || carrito.length === 0) {
@@ -27,94 +39,96 @@ export const registerSale = async (saleData) => {
   try {
     await connection.beginTransaction();
 
-    // 1. Cálculos base de la venta
     const subtotal_venta = carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
     const total_venta = subtotal_venta - descuento;
 
-    // 2. Insertar en tabla `venta`
     const [resultVenta] = await connection.query(
-      `INSERT INTO venta (id_cliente, id_sucursal, id_usuario, tipo_pago, subtotal, descuento, total) 
+      `INSERT INTO venta (id_cliente, id_sucursal, id_usuario, tipo_pago, subtotal, descuento, total)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id_cliente || null, id_sucursal, id_usuario, tipo_pago, subtotal_venta, descuento, total_venta]
+      [id_cliente || null, id_sucursal, id_usuario, tipo_pago, subtotal_venta, descuento, total_venta],
     );
     const id_venta = resultVenta.insertId;
 
-    // 3. Insertar en tabla `detalle_venta`
     for (const item of carrito) {
       await connection.query(
-        `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_venta, subtotal) 
+        `INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_venta, subtotal)
          VALUES (?, ?, ?, ?, ?)`,
-        [id_venta, item.id_producto, item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)]
+        [id_venta, item.id_producto, item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)],
+      );
+
+      const [inventarios] = await connection.query(
+        `SELECT id_inventario, stock FROM inventario
+         WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE`,
+        [id_sucursal, item.id_producto],
+      );
+
+      if (inventarios.length === 0) {
+        throw new AppError(`El producto ${item.id_producto} no tiene stock registrado en esta sucursal`, 400);
+      }
+
+      const inv = inventarios[0];
+      const stock_anterior = Number(inv.stock);
+      const stock_nuevo = stock_anterior - Number(item.cantidad);
+
+      if (stock_nuevo < 0) {
+        throw new AppError(`Stock insuficiente para el producto ${item.id_producto}. Disponible: ${stock_anterior}, solicitado: ${item.cantidad}`, 400);
+      }
+
+      await connection.query(
+        `UPDATE inventario SET stock = ? WHERE id_inventario = ?`,
+        [stock_nuevo, inv.id_inventario],
+      );
+
+      await connection.query(
+        `INSERT INTO movimiento_inventario (id_inventario, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, referencia_tipo, referencia_id, observacion)
+         VALUES (?, 'SALIDA', ?, ?, ?, 'VENTA', ?, ?)`,
+        [inv.id_inventario, item.cantidad, stock_anterior, stock_nuevo, id_venta, `Venta #${id_venta}`],
       );
     }
 
-    // 4. Generar número de factura, calcular IMPUESTO e insertar en `factura`
     const numero_factura = `F-${Date.now()}`;
-    
-    // Calculamos el 13% de IVA sobre el total cobrado y lo redondeamos a 2 decimales
     const impuesto_iva = parseFloat((total_venta * 0.13).toFixed(2));
-    // El subtotal de la factura será el total menos el impuesto (Base Imponible)
     const subtotal_factura = parseFloat((total_venta - impuesto_iva).toFixed(2));
 
     const [resultFactura] = await connection.query(
-      `INSERT INTO factura (id_venta, numero_factura, nit_cliente, razon_social_cliente, subtotal, impuesto, total) 
+      `INSERT INTO factura (id_venta, numero_factura, nit_cliente, razon_social_cliente, subtotal, impuesto, total)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [id_venta, numero_factura, nit_cliente, razon_social_cliente, subtotal_factura, impuesto_iva, total_venta]
+      [id_venta, numero_factura, nit_cliente, razon_social_cliente, subtotal_factura, impuesto_iva, total_venta],
     );
     const id_factura = resultFactura.insertId;
 
-    // 5. Insertar en `detalle_factura`
     for (const item of carrito) {
       await connection.query(
-        `INSERT INTO detalle_factura (id_factura, id_producto, descripcion, cantidad, precio_unitario, subtotal) 
+        `INSERT INTO detalle_factura (id_factura, id_producto, descripcion, cantidad, precio_unitario, subtotal)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [id_factura, item.id_producto, item.descripcion, item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)]
+        [id_factura, item.id_producto, item.descripcion, item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)],
       );
     }
 
-    // 6. Confirmamos la transacción de ventas localmente PRIMERO
     await connection.commit();
 
-    // --- INTEGRACIÓN CON MICROSERVICIOS EXTERNOS ---
-    
-    /*
-    const inventarioReq = await fetch('http://localhost:7803/api/stock/descontar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id_sucursal, carrito })
-    });
-    if (!inventarioReq.ok) {
-        await db.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
-        await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
-        throw new Error('Fallo al descontar el inventario. Venta ANULADA.');
-    }
-    */
-
-    // 7. LLAMADA HTTP INTERNA: Crear Cuenta por Cobrar (Solo si es a CREDITO)
-    if (tipo_pago === 'CREDITO') {
+    if (tipo_pago === "CREDITO") {
       if (!id_cliente) {
         await db.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
-        throw new AppError('El cliente es obligatorio para ventas a crédito', 400);
+        throw new AppError("El cliente es obligatorio para ventas a crédito", 400);
       }
-      
-      const cxcReq = await fetch('http://localhost:7805/api/payments/incoming/pending', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_venta, id_cliente, monto_total: total_venta })
+
+      const cxcReq = await fetch("http://localhost:7805/api/payments/incoming/pending", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_venta, id_cliente, monto_total: total_venta }),
       });
 
       if (!cxcReq.ok) {
         await db.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
-        
         const errData = await cxcReq.json().catch(() => ({}));
-        throw new AppError(`Finanzas rechazó la operación. Venta ANULADA por seguridad. Motivo: ${errData.error || 'Error de conexión'}`, 500);
+        throw new AppError(`Finanzas rechazó la operación. Venta ANULADA. Motivo: ${errData.error || "Error de conexión"}`, 500);
       }
     }
 
     return { id_venta, numero_factura };
-
   } catch (error) {
     await connection.rollback();
     throw error;
@@ -123,39 +137,99 @@ export const registerSale = async (saleData) => {
   }
 };
 
-// Obtener una venta específica con su detalle
 export const findSaleById = async (id) => {
-  // 1. Buscamos la cabecera de la venta
-  const [ventas] = await db.query("SELECT * FROM venta WHERE id_venta = ?", [id]);
-  
+  const [ventas] = await db.query(
+    `SELECT v.*, s.nombre as sucursal_nombre, u.username as usuario_nombre,
+            f.id_factura, f.numero_factura, f.fecha_emision, f.nit_cliente,
+            f.razon_social_cliente, f.subtotal as factura_subtotal, f.impuesto,
+            f.total as factura_total, f.estado as factura_estado
+     FROM venta v
+     JOIN sucursal s ON v.id_sucursal = s.id_sucursal
+     JOIN usuario u ON v.id_usuario = u.id_usuario
+     LEFT JOIN factura f ON v.id_venta = f.id_venta
+     WHERE v.id_venta = ?`,
+    [id],
+  );
+
   if (ventas.length === 0) {
     throw new AppError("Venta no encontrada", 404);
   }
 
   const venta = ventas[0];
 
-  // 2. Buscamos el detalle de los productos de esa venta
-  const [detalles] = await db.query("SELECT * FROM detalle_venta WHERE id_venta = ?", [id]);
+  const [detalles] = await db.query(
+    `SELECT dv.*, p.nombre as producto_nombre, p.codigo as producto_codigo,
+            u.abreviatura as unidad_abreviatura
+     FROM detalle_venta dv
+     JOIN producto p ON dv.id_producto = p.id_producto
+     JOIN unidad_medida u ON p.id_unidad = u.id_unidad
+     WHERE dv.id_venta = ?`,
+    [id],
+  );
 
-  // 3. Devolvemos la venta con un arreglo llamado "detalle_ventas"
+  const [detallesFactura] = await db.query(
+    `SELECT df.*, p.nombre as producto_nombre, p.codigo as producto_codigo
+     FROM detalle_factura df
+     JOIN producto p ON df.id_producto = p.id_producto
+     WHERE df.id_factura = ?`,
+    [venta.id_factura],
+  );
+
   return {
     ...venta,
-    detalle_ventas: detalles
+    detalle_ventas: detalles,
+    detalle_factura: detallesFactura,
   };
 };
 
-// Anular una venta y su factura
 export const annulSale = async (id) => {
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
 
-    // Cambiamos el estado en la tabla venta y en la factura
+    const [ventas] = await connection.query(
+      "SELECT id_sucursal, estado FROM venta WHERE id_venta = ? FOR UPDATE",
+      [id],
+    );
+
+    if (ventas.length === 0) {
+      throw new AppError("Venta no encontrada", 404);
+    }
+
+    if (ventas[0].estado === "ANULADA") {
+      throw new AppError("La venta ya se encuentra anulada", 400);
+    }
+
     await connection.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id]);
     await connection.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id]);
 
+    const [detalles] = await connection.query(
+      "SELECT id_producto, cantidad FROM detalle_venta WHERE id_venta = ?",
+      [id],
+    );
+
+    for (const det of detalles) {
+      const [inventarios] = await connection.query(
+        `SELECT id_inventario, stock FROM inventario
+         WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE`,
+        [ventas[0].id_sucursal, det.id_producto],
+      );
+
+      if (inventarios.length > 0) {
+        const inv = inventarios[0];
+        const stock_anterior = Number(inv.stock);
+        const stock_nuevo = stock_anterior + Number(det.cantidad);
+        await connection.query("UPDATE inventario SET stock = ? WHERE id_inventario = ?", [stock_nuevo, inv.id_inventario]);
+        await connection.query(
+          `INSERT INTO movimiento_inventario (id_inventario, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, referencia_tipo, referencia_id, observacion)
+           VALUES (?, 'ENTRADA', ?, ?, ?, 'VENTA_ANULADA', ?, ?)`,
+          [inv.id_inventario, det.cantidad, stock_anterior, stock_nuevo, id, `Devolución por anulación de venta #${id}`],
+        );
+      }
+    }
+
     await connection.commit();
-    return { id_venta: id, estado: 'ANULADA' };
+    return { id_venta: id, estado: "ANULADA" };
   } catch (error) {
     await connection.rollback();
     throw error;

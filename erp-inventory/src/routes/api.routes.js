@@ -39,15 +39,14 @@ apiRouter.put("/catalogo/productos/:id", idParamValidator, productoUpdateValidat
 apiRouter.delete("/catalogo/productos/:id", idParamValidator, validate, removeProduct);
 
 apiRouter.get("/stock", getInventarios);
+apiRouter.get("/stock/reporte/pdf", sucursalQueryValidator, validate, getReporteStockPdf);
+apiRouter.get("/stock/reporte", sucursalQueryValidator, validate, getReporteStock);
+apiRouter.post("/stock/inicializar", stockInicialValidator, validate, postInicializarStock);
+apiRouter.post("/stock/transferir", transferenciaValidator, validate, postTransferirStock);
 apiRouter.get("/stock/:id", idParamValidator, validate, getInventario);
 apiRouter.post("/stock", inventarioValidator, validate, postInventario);
 apiRouter.put("/stock/:id", idParamValidator, inventarioUpdateValidator, validate, putInventario);
 apiRouter.delete("/stock/:id", idParamValidator, validate, removeInventario);
-
-apiRouter.post("/stock/inicializar", stockInicialValidator, validate, postInicializarStock);
-apiRouter.post("/stock/transferir", transferenciaValidator, validate, postTransferirStock);
-apiRouter.get("/stock/reporte", sucursalQueryValidator, validate, getReporteStock);
-apiRouter.get("/stock/reporte/pdf", sucursalQueryValidator, validate, getReporteStockPdf);
 
 apiRouter.get("/movimientos", getMovimientos);
 apiRouter.get("/movimientos/:id", idParamValidator, validate, getMovimiento);

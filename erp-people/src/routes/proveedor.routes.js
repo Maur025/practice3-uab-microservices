@@ -7,6 +7,7 @@ import {
   updateProvider,
 } from "../controllers/provider.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { sanitizeBody } from "../middlewares/sanitize.middleware.js";
 import {
   idParamValidator,
   proveedorUpdateValidator,
@@ -17,10 +18,11 @@ const providerRouter = Router();
 
 providerRouter.get("/", getProviders);
 providerRouter.get("/:id", idParamValidator, validate, getProviderById);
-providerRouter.post("/", proveedorValidator, validate, createProvider);
+providerRouter.post("/", sanitizeBody, proveedorValidator, validate, createProvider);
 providerRouter.put(
   "/:id",
   idParamValidator,
+  sanitizeBody,
   proveedorUpdateValidator,
   validate,
   updateProvider,

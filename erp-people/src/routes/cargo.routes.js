@@ -1,6 +1,7 @@
 import { Router } from "express";
 import cargoController from "../controllers/cargo.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { sanitizeBody } from "../middlewares/sanitize.middleware.js";
 import {
   idParamValidator,
   cargoValidator,
@@ -11,10 +12,11 @@ const cargoRouter = Router();
 
 cargoRouter.get("/", cargoController.getAll);
 cargoRouter.get("/:id", idParamValidator, validate, cargoController.getById);
-cargoRouter.post("/", cargoValidator, validate, cargoController.create);
+cargoRouter.post("/", sanitizeBody, cargoValidator, validate, cargoController.create);
 cargoRouter.put(
   "/:id",
   idParamValidator,
+  sanitizeBody,
   cargoUpdateValidator,
   validate,
   cargoController.update,

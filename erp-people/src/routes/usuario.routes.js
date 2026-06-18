@@ -1,6 +1,7 @@
 import { Router } from "express";
 import usuarioController from "../controllers/usuario.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { sanitizeBody } from "../middlewares/sanitize.middleware.js";
 import {
   idParamValidator,
   usuarioValidator,
@@ -16,10 +17,11 @@ usuarioRouter.get(
   validate,
   usuarioController.getById,
 );
-usuarioRouter.post("/", usuarioValidator, validate, usuarioController.create);
+usuarioRouter.post("/", sanitizeBody, usuarioValidator, validate, usuarioController.create);
 usuarioRouter.put(
   "/:id",
   idParamValidator,
+  sanitizeBody,
   usuarioUpdateValidator,
   validate,
   usuarioController.update,

@@ -21,10 +21,10 @@ export const sucursalValidator = [
 
 export const sucursalUpdateValidator = [
   body("nombre")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("Nombre no puede estar vacío"),
-  body("activo").optional().isBoolean().withMessage("activo debe ser booleano"),
+  body("activo").optional({ values: "null" }).isBoolean().withMessage("activo debe ser booleano"),
 ];
 
 export const cargoValidator = [
@@ -33,7 +33,7 @@ export const cargoValidator = [
 
 export const cargoUpdateValidator = [
   body("nombre")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("Nombre no puede estar vacío"),
 ];
@@ -41,63 +41,63 @@ export const cargoUpdateValidator = [
 export const clienteValidator = [
   body("nombres").notEmpty().withMessage("Nombres requeridos"),
   body("apellidos")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("apellidos debe ser texto"),
-  body("nit_ci").optional().isString().withMessage("nit_ci debe ser texto"),
-  body("telefono").optional().isString().withMessage("telefono debe ser texto"),
-  body("email").optional().isEmail().withMessage("email inválido"),
+  body("nit_ci").optional({ values: "null" }).isString().withMessage("nit_ci debe ser texto"),
+  body("telefono").optional({ values: "null" }).isString().withMessage("telefono debe ser texto"),
+  body("email").optional({ values: "null" }).isEmail().withMessage("email inválido"),
   body("direccion")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("direccion debe ser texto"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
 ];
 
 export const clienteUpdateValidator = [
   body("nombres")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("Nombres no puede estar vacío"),
   body("apellidos")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("apellidos debe ser texto"),
-  body("nit_ci").optional().isString().withMessage("nit_ci debe ser texto"),
-  body("telefono").optional().isString().withMessage("telefono debe ser texto"),
-  body("email").optional().isEmail().withMessage("email inválido"),
+  body("nit_ci").optional({ values: "null" }).isString().withMessage("nit_ci debe ser texto"),
+  body("telefono").optional({ values: "null" }).isString().withMessage("telefono debe ser texto"),
+  body("email").optional({ values: "null" }).isEmail().withMessage("email inválido"),
   body("direccion")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("direccion debe ser texto"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
 ];
 
 export const proveedorValidator = [
   body("razon_social").notEmpty().withMessage("razon_social requerido"),
-  body("nit").optional().isString().withMessage("nit debe ser texto"),
-  body("telefono").optional().isString().withMessage("telefono debe ser texto"),
-  body("email").optional().isEmail().withMessage("email inválido"),
+  body("nit").optional({ values: "null" }).isString().withMessage("nit debe ser texto"),
+  body("telefono").optional({ values: "null" }).isString().withMessage("telefono debe ser texto"),
+  body("email").optional({ values: "null" }).isEmail().withMessage("email inválido"),
   body("direccion")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("direccion debe ser texto"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
 ];
 
 export const proveedorUpdateValidator = [
   body("razon_social")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("razon_social no puede estar vacío"),
-  body("nit").optional().isString().withMessage("nit debe ser texto"),
-  body("telefono").optional().isString().withMessage("telefono debe ser texto"),
-  body("email").optional().isEmail().withMessage("email inválido"),
+  body("nit").optional({ values: "null" }).isString().withMessage("nit debe ser texto"),
+  body("telefono").optional({ values: "null" }).isString().withMessage("telefono debe ser texto"),
+  body("email").optional({ values: "null" }).isEmail().withMessage("email inválido"),
   body("direccion")
-    .optional()
+    .optional({ values: "null" })
     .isString()
     .withMessage("direccion debe ser texto"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
 ];
 
 export const empleadoValidator = [
@@ -113,18 +113,18 @@ export const empleadoValidator = [
 
 export const empleadoUpdateValidator = [
   body("sucursal_id")
-    .optional()
+    .optional({ values: "null" })
     .isInt({ min: 1 })
     .withMessage("sucursal_id inválido"),
   body("cargo_id")
-    .optional()
+    .optional({ values: "null" })
     .isInt({ min: 1 })
     .withMessage("cargo_id inválido"),
   body("fecha_ingreso")
-    .optional()
+    .optional({ values: "null" })
     .isISO8601()
     .withMessage("Fecha de ingreso inválida"),
-  body("activo").optional().isBoolean().withMessage("activo debe ser booleano"),
+  body("activo").optional({ values: "null" }).isBoolean().withMessage("activo debe ser booleano"),
 ];
 
 export const usuarioValidator = [
@@ -132,8 +132,8 @@ export const usuarioValidator = [
   body("password")
     .isLength({ min: 8 })
     .withMessage("Contraseña mínimo 8 caracteres"),
-  body("rol").optional().notEmpty().withMessage("rol no puede estar vacío"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("rol").optional({ values: "null" }).notEmpty().withMessage("rol no puede estar vacío"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
   body().custom((_, { req }) => {
     const username = req.body.username ?? req.body.nombre_usuario;
     if (!username || `${username}`.trim().length === 0) {
@@ -146,21 +146,21 @@ export const usuarioValidator = [
 
 export const usuarioUpdateValidator = [
   body("empleado_id")
-    .optional()
+    .optional({ values: "null" })
     .isInt({ min: 1 })
     .withMessage("empleado_id inválido"),
   body("username")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("username no puede estar vacío"),
   body("nombre_usuario")
-    .optional()
+    .optional({ values: "null" })
     .notEmpty()
     .withMessage("nombre_usuario no puede estar vacío"),
   body("password")
-    .optional()
+    .optional({ values: "null" })
     .isLength({ min: 8 })
     .withMessage("Contraseña mínimo 8 caracteres"),
-  body("rol").optional().notEmpty().withMessage("rol no puede estar vacío"),
-  body("estado").optional().isBoolean().withMessage("estado debe ser booleano"),
+  body("rol").optional({ values: "null" }).notEmpty().withMessage("rol no puede estar vacío"),
+  body("estado").optional({ values: "null" }).isBoolean().withMessage("estado debe ser booleano"),
 ];

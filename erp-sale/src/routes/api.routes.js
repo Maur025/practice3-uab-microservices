@@ -1,7 +1,7 @@
 import { Router } from "express";
 import {
   getSales, createSale, getSale, updateSaleStatus,
-  getInvoicePdf, getRevenue, getCustomerFidelity, getTopCustomersList,
+  getInvoicePdf, getRevenue, getRevenuePdf, getCustomerFidelity, getTopCustomersList,
 } from "../controllers/sale.controller.js";
 import {
   createSaleValidator, updateStatusValidator, idParamValidator, dateRangeValidator,
@@ -21,6 +21,7 @@ apiRouter.put("/ventas/:id", idParamValidator, updateStatusValidator, validation
 apiRouter.get("/ventas/facturas/:id/pdf", idParamValidator, validationResultMiddleware, getInvoicePdf);
 
 apiRouter.get("/ventas/reportes/ingresos", dateRangeValidator, validationResultMiddleware, getRevenue);
+apiRouter.get("/ventas/reportes/ingresos/pdf", dateRangeValidator, validationResultMiddleware, getRevenuePdf);
 
 apiRouter.get("/ventas/clientes/top", getTopCustomersList);
 

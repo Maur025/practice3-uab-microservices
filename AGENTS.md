@@ -8,34 +8,20 @@
 - [x] **2. Módulo Inventarios (erp-inventory)** — CRUD completo de categorías, unidades de medida, productos (con campo costo), gestión de stock por sucursal, movimientos de inventario, inicialización de stocks, transferencia entre sucursales, reporte de stock por empresa. Validaciones con express-validator, paginación, Swagger.
 - [x] **3. Módulo Personas (erp-people)** — CRUD completo de clientes, proveedores, cargos, empleados y usuarios con validaciones y paginación.
 - [x] **4. Módulo Ventas (erp-sale)** — Creación de venta con transacción, descuento de stock integrado, generación de PDF de factura (vía pdfkit), estadísticas de fidelización de clientes, reporte de ingresos, validaciones con express-validator, Swagger completo. Lint pasa limpio.
-- [ ] **5. Módulo Compras (erp-purchase)** — Solo existe GET `/compras`. Faltan: CRUD completo con transacciones, integración con inventario (entrada de stock), integración con pagos (CxP).
-- [ ] **6. Módulo Pagos (erp-payment)** — CxC y pagos de clientes funcionando con FOR UPDATE. Faltan: CxP (creación y pago a proveedores).
+- [x] **5. Módulo Compras (erp-purchase)** — CRUD completo con transacciones, integración con inventario (entrada de stock + movimiento_inventario), integración con pagos (CxP vía HTTP). Express-validator, Swagger.
+- [x] **6. Módulo Pagos (erp-payment)** — CxC y pagos de clientes con FOR UPDATE. CxP completo: creación y pago a proveedores con FOR UPDATE. Express-validator, Swagger.
 - [x] **7. API Gateway (erp-gateway)** — Proxy funcionando con empresa movida a erp-company (puerto 7806). Sin lógica de negocio interna.
 - [x] **8. Reportes de ingresos (req. 10)** — Endpoint GET `/ventas/reportes/ingresos` con filtros por fecha, rango y sucursal. Integrado en erp-sale.
 - [x] **9. Respuesta estandarizada** — Patrón `{ code, data, message, pagination }` implementado en todos los servicios.
-- [x] **10. Validaciones con express-validator** — Implementadas en erp-company, erp-people, erp-inventory y erp-sale. Faltan en erp-purchase, erp-payment.
+- [x] **10. Validaciones con express-validator** — Implementadas en los 6 microservicios (erp-company, erp-people, erp-inventory, erp-sale, erp-purchase, erp-payment).
 - [x] **11. PDF de factura (req. 7)** — GET `/ventas/facturas/:id/pdf` retorna PDF con datos de factura + detalle_factura, content-type: pdf.
 - [x] **12. Inicialización de stocks (req. 4)** — Implementado en POST `/stock/inicializar`.
 - [x] **13. Transferencia de stocks (req. 5)** — Implementado en POST `/stock/transferir`.
 - [x] **14. Estadísticas de fidelización (req. 8)** — Endpoints: GET `/ventas/clientes/:id/fidelizacion` (frecuencia, sucursal preferida, producto más consumido) y GET `/ventas/clientes/top` (top compradores).
 - [x] **15. Base de datos** — Schema SQL completo con todas las tablas necesarias (empresa, sucursal, producto, inventario, movimiento_inventario, venta, factura, etc.).
-
-### Frontend (Angular)
-
-- [x] **1. Estructura general** — Aplicación Angular 17 standalone con routing lazy, Material Design, layout responsive con sidebar y toolbar.
-- [x] **2. Componente genérico EntityCrud** — CRUD genérico configurable para 22 entidades con campos dinámicos, relaciones, tabs.
-- [x] **3. Formularios especializados** — CompraFormComponent y VentaFormComponent con líneas dinámicas, auto-cálculos, integración mock.
-- [x] **4. Dashboard** — 6 tarjetas KPI con datos simulados.
-- [x] **5. Capa de datos mock** — MockDatabase con 17 tablas y lógica de negocio simulada (stock, factura, CxC, CxP).
-- [x] **6. Modelos TypeScript** — 21 interfaces definidas para todas las entidades.
-- [x] **7. Configuración de entidades** — EntityConfig con metadatos completos para cada entidad.
-- [ ] **8. Autenticación/Autorización** — `auth.guard.ts` es un stub que siempre retorna true. No hay login ni JWT.
-- [ ] **9. Integración real con API** — Todo funciona con mock data (`useMockData: true`). Los endpoints HTTP están definidos pero nunca se llaman en producción.
-- [ ] **10. PDF de factura (frontend)** — No hay componente para visualizar/imprimir facturas en PDF.
-- [ ] **11. UI de pagos** — No hay UI especializada para registrar pagos parciales contra CxC/CxP.
-- [ ] **12. Reportes** — No hay componentes de reportes (stock por empresa, ingresos diarios).
-- [ ] **13. Feedback al usuario** — No hay snackbar/toast después de operaciones exitosas.
-- [ ] **14. Testing** — Solo el test por defecto de `app.component.spec.ts` que está desactualizado.
+- [x] **16. Reporte PDF de stock por empresa** — GET `/inventarios/stock/reporte/pdf` genera PDF con stock agrupado por empresa/sucursal.
+- [x] **17. Reporte PDF de ingresos** — GET `/ventas/reportes/ingresos/pdf` genera PDF con resumen de ingresos y desglose por sucursal.
+- [x] **18. Fix erp-sale column names** — Corregido `inventario.stock` → `stock_actual` y `movimiento_inventario` columnas para coincidir con schema SQL.
 
 ## Arquitectura
 
@@ -136,6 +122,8 @@ Excepción: `erp-people` tiene una estructura más compleja con `middlewares/`, 
 
 - **`erp-sale/src/services/sale.service.js`**: `registerSale` — crea venta + detalle_venta + factura + detalle_factura + (opcional) llama a payment para CxC
 - **`erp-payment/src/services/collection.service.js`**: `registerCollection` — pago de cliente con `SELECT ... FOR UPDATE`, valida saldo, actualiza cuenta
+- **`erp-purchase/src/services/purchase.service.js`**: `createPurchase` — crea compra + detalle_compra + entrada de stock + movimiento_inventario + (opcional) llama a payment para CxP
+- **`erp-payment/src/services/payment.service.js`**: `registerSupplierPayment` — pago a proveedor con `SELECT ... FOR UPDATE`, valida saldo, actualiza CxP
 
 ## Variables de entorno compartidas
 
@@ -207,3 +195,472 @@ Debemos apuntar a una respuesta de este tipo, debemos normalizarlo en todo el pr
   }
 }
 ```
+
+---
+
+## 📋 Guía de Integración para Frontend (Angular)
+
+Actualmente el frontend usa `useMockData: true` con `MockDatabase`. Para conectar con los microservicios reales se debe cambiar a `useMockData: false` y apuntar al **API Gateway** (`http://localhost:7800`). Todas las rutas pasan por el gateway y este redirige al microservicio correspondiente.
+
+### 1. Configuración base
+
+```typescript
+// environment.ts
+export const environment = {
+  production: false,
+  apiUrl: "http://localhost:7800/api", // Gateway
+  useMockData: false,
+};
+```
+
+### 2. Respuesta estandarizada — TODOS los endpoints
+
+```typescript
+interface ApiResponse<T> {
+  code: number; // 200 | 201 | 400 | 404 | 500
+  data: T; // objeto | array | null
+  message: string;
+  pagination?: {
+    count: number;
+    pages: number;
+  };
+}
+```
+
+**Paginación:** toda GET-list acepta `?page=1&limit=20` y devuelve `pagination`. Default: page=1, limit=20, max limit=100.
+
+---
+
+### 3. Catálogo base (datos para selects/dropdowns)
+
+Estos endpoints devuelven datos maestros que se cargan al iniciar para poblar selects:
+
+```typescript
+// ─── Empresas ───────────────────────────────────────
+GET  /organizaciones/empresas           // [{ id_empresa, nombre, nit }]
+POST /organizaciones/empresas           // body: { nombre, nit, direccion?, telefono?, email? }
+PUT  /organizaciones/empresas/:id       // body: { nombre?, nit?, direccion?, telefono?, email?, estado? }
+DEL  /organizaciones/empresas/:id       // soft-delete
+
+// ─── Sucursales ────────────────────────────────────
+GET  /organizaciones/sucursales?        // ?id_empresa=<int> para filtrar
+     id_empresa=<int>
+POST /organizaciones/sucursales         // body: { id_empresa, nombre, direccion?, ciudad? }
+PUT  /organizaciones/sucursales/:id     // body parcial
+DEL  /organizaciones/sucursales/:id     // soft-delete
+
+// ─── Categorías ─────────────────────────────────────
+GET  /inventarios/catalogo/categorias
+POST /inventarios/catalogo/categorias   // body: { nombre }
+PUT  /inventarios/catalogo/categorias/:id
+DEL  /inventarios/catalogo/categorias/:id
+
+// ─── Unidades de Medida ────────────────────────────
+GET  /inventarios/catalogo/unidades
+POST /inventarios/catalogo/unidades     // body: { nombre, abreviatura }
+PUT  /inventarios/catalogo/unidades/:id
+DEL  /inventarios/catalogo/unidades/:id
+
+// ─── Productos ──────────────────────────────────────
+GET  /inventarios/catalogo/productos?   // ?id_categoria=<int>&id_sucursal=<int>
+     id_categoria=<int>&
+     id_sucursal=<int>
+POST /inventarios/catalogo/productos    // body: { id_categoria, id_unidad, nombre,
+                                        //         precio_venta, codigo?, descripcion?, costo? }
+PUT  /inventarios/catalogo/productos/:id
+DEL  /inventarios/catalogo/productos/:id  // soft-delete
+
+// ─── Clientes ────────────────────────────────────────
+GET  /personas/clientes
+POST /personas/clientes                 // body: { nombres, apellidos?, nit_ci?, telefono?,
+                                        //         email?, direccion? }
+PUT  /personas/clientes/:id
+DEL  /personas/clientes/:id
+
+// ─── Proveedores ─────────────────────────────────────
+GET  /personas/proveedores
+POST /personas/proveedores              // body: { razon_social, nit?, telefono?,
+                                        //         email?, direccion? }
+PUT  /personas/proveedores/:id
+DEL  /personas/proveedores/:id
+
+// ─── Usuarios ────────────────────────────────────────
+GET  /personas/usuarios
+POST /personas/usuarios                 // body: { empleado_id, password, username,
+                                        //         rol? }
+PUT  /personas/usuarios/:id
+
+// ─── Cargos ──────────────────────────────────────────
+GET  /personas/cargos
+POST /personas/cargos                   // body: { nombre }
+PUT  /personas/cargos/:id
+```
+
+---
+
+### 4. Inventario — Stock y movimientos
+
+#### 4.1 Ver stock por sucursal
+
+```
+GET /inventarios/stock?id_sucursal=<int>&id_producto=<int>
+```
+
+Devuelve inventario con joins a sucursal, producto, unidad. Incluye `stock_actual`, `stock_minimo`.
+
+#### 4.2 Inicializar stock (carga inicial)
+
+```
+POST /inventarios/stock/inicializar
+Content-Type: application/json
+
+{
+  "id_sucursal": 1,
+  "productos": [
+    { "id_producto": 1, "cantidad": 100, "stock_minimo": 10 }
+  ]
+}
+```
+
+**Respuesta:** `{ movimientos_generados: [id_mov, ...] }` (código 201)
+
+#### 4.3 Transferir stock entre sucursales
+
+```
+POST /inventarios/stock/transferir
+Content-Type: application/json
+
+{
+  "id_sucursal_origen": 1,
+  "id_sucursal_destino": 2,
+  "productos": [
+    { "id_producto": 1, "cantidad": 50 }
+  ]
+}
+```
+
+**Respuesta:** `{ movimientos_generados: [id_mov, ...] }` (código 200)
+
+#### 4.4 Movimientos manuales
+
+```
+POST /inventarios/movimientos
+Content-Type: application/json
+
+{
+  "id_sucursal": 1,
+  "id_producto": 1,
+  "tipo_movimiento": "ENTRADA",    // ENTRADA | SALIDA | AJUSTE
+  "origen": "AJUSTE",              // COMPRA | VENTA | DEVOLUCION | AJUSTE
+  "cantidad": 10,
+  "referencia": "AJUSTE-MANUAL",
+  "observacion": "Ajuste por inventario físico"
+}
+```
+
+---
+
+### 5. Ventas — Flujo principal
+
+#### 5.1 Registrar venta (core transaccional)
+
+```
+POST /ventas/ventas
+Content-Type: application/json
+
+{
+  "id_sucursal": 1,
+  "id_usuario": 1,
+  "tipo_pago": "CONTADO",           // CONTADO | CREDITO
+  "id_cliente": null,               // null = consumidor final
+  "descuento": 0,
+  "nit_cliente": "1234567",
+  "razon_social_cliente": "Juan Pérez",
+  "carrito": [
+    {
+      "id_producto": 1,
+      "cantidad": 2,
+      "precio_unitario": 18.50,
+      "descripcion": "Producto X"
+    }
+  ]
+}
+```
+
+**Respuesta:**
+
+```json
+{
+  "code": 201,
+  "data": {
+    "id_venta": 1,
+    "numero_factura": "F-1718612345678"
+  },
+  "message": "Venta y factura registradas correctamente"
+}
+```
+
+**Lo que hace internamente:**
+
+1. Crea `venta` + `detalle_venta`
+2. Bloquea fila `inventario` con `FOR UPDATE`, descuenta stock
+3. Registra `movimiento_inventario` tipo `SALIDA`
+4. Genera `factura` + `detalle_factura` (snapshot de precios)
+5. Si `tipo_pago = CREDITO`: llama a erp-payment para crear CxC; si falla, anula la venta
+
+#### 5.2 Consultar venta
+
+```
+GET /ventas/ventas/:id
+```
+
+Devuelve: venta + `detalle_ventas[]` + `detalle_factura[]` + datos sucursal/usuario/factura
+
+#### 5.3 Anular venta
+
+```
+PUT /ventas/ventas/:id
+Content-Type: application/json
+
+{ "estado": "ANULADA" }
+```
+
+**Respuesta:** `{ code: 200, data: { id_venta, estado: "ANULADA" }, message: "..." }`
+
+#### 5.4 Obtener PDF de factura
+
+```
+GET /ventas/ventas/facturas/:id/pdf
+```
+
+**Respuesta:** `application/pdf` binario (NO base64). El frontend debe abrirlo con:
+
+```typescript
+// Angular: descargar y mostrar PDF
+this.http
+  .get(`ventas/ventas/facturas/${id}/pdf`, { responseType: "blob" })
+  .subscribe((blob) => {
+    const url = window.URL.createObjectURL(blob);
+    window.open(url); // nueva pestaña
+    // o <iframe [src]="sanitizer.bypassSecurityTrustResourceUrl(url)">
+  });
+```
+
+---
+
+### 6. Compras — Flujo de reposición
+
+#### 6.1 Registrar compra
+
+```
+POST /compras/compras
+Content-Type: application/json
+
+{
+  "id_proveedor": 1,
+  "id_sucursal": 1,
+  "id_usuario": 1,
+  "tipo_pago": "CONTADO",           // CONTADO | CREDITO
+  "detalles": [
+    {
+      "id_producto": 1,
+      "cantidad": 50,
+      "precio_compra": 12.00
+    }
+  ]
+}
+```
+
+**Respuesta:** objeto compra completo con `detalles[]` y `cuenta_por_pagar` (201)
+
+**Lo que hace internamente:**
+
+1. Crea `compra` + `detalle_compra`
+2. Actualiza/crea `inventario` (ENTRADA)
+3. Registra `movimiento_inventario` tipo `ENTRADA`
+4. Si `CREDITO`: llama a erp-payment para crear CxP; si falla, anula la compra
+
+#### 6.2 Consultar compra
+
+```
+GET /compras/compras/:id
+```
+
+#### 6.3 Anular compra
+
+```
+PUT /compras/compras/:id
+Content-Type: application/json
+
+{ "estado": "ANULADA" }
+```
+
+**Respuesta:** `{ code: 200, data: { id_compra, estado: "ANULADA" }, message: "..." }`
+
+---
+
+### 7. Pagos — CxC y CxP
+
+#### 7.1 Cuentas por Cobrar (CxC)
+
+```
+GET  /finanzas/cuentas-por-cobrar          // lista con paginación
+GET  /finanzas/cuentas-por-cobrar/:id      // detalle + pagos[]
+POST /finanzas/cuentas-por-cobrar          // solo uso interno (lo llama erp-sale)
+```
+
+#### 7.2 Registrar pago de cliente (Cobro)
+
+```
+POST /finanzas/pagos-clientes
+Content-Type: application/json
+
+{
+  "id_cxc": 1,
+  "monto": 50.00,
+  "metodo_pago": "EFECTIVO",        // opcional
+  "observacion": "Pago parcial"     // opcional
+}
+```
+
+**Respuesta:**
+
+```json
+{
+  "code": 201,
+  "data": {
+    "id_pago_cliente": 1,
+    "nuevo_saldo": 25.0,
+    "estado_cuenta": "PENDIENTE" // PENDIENTE | PAGADA
+  },
+  "message": "Pago registrado exitosamente"
+}
+```
+
+#### 7.3 Cuentas por Pagar (CxP)
+
+```
+GET  /finanzas/cuentas-por-pagar           // lista con paginación
+GET  /finanzas/cuentas-por-pagar/:id       // detalle + pagos[]
+POST /finanzas/cuentas-por-pagar           // solo uso interno (lo llama erp-purchase)
+```
+
+#### 7.4 Registrar pago a proveedor
+
+```
+POST /finanzas/pagos-proveedores
+Content-Type: application/json
+
+{
+  "id_cxp": 1,
+  "monto": 500.00,
+  "metodo_pago": "TRANSFERENCIA",
+  "observacion": "Pago factura #123"
+}
+```
+
+**Respuesta:** mismo formato que pagos-clientes pero con `id_pago_proveedor`.
+
+---
+
+### 8. Reportes
+
+#### 8.1 Reporte de stock por empresa
+
+```
+GET /inventarios/stock/reporte?id_empresa=<int>&id_producto=<int>
+```
+
+**Respuesta JSON:** Array de filas con empresa, sucursal, producto, `stock_actual`.
+
+```
+GET /inventarios/stock/reporte/pdf?id_empresa=<int>&id_producto=<int>
+```
+
+**Respuesta:** `application/pdf` binario con tabla agrupada por empresa.
+
+#### 8.2 Reporte de ingresos
+
+```
+GET /ventas/ventas/reportes/ingresos?fecha=2026-06-17
+GET /ventas/ventas/reportes/ingresos?fecha_desde=2026-06-01&fecha_hasta=2026-06-17
+GET /ventas/ventas/reportes/ingresos?fecha=2026-06-17&id_sucursal=1
+```
+
+**Respuesta JSON:**
+
+```json
+{
+  "code": 200,
+  "data": {
+    "total_ventas": 42,
+    "total_ingresos": 12500.50,
+    "total_descuentos": 150.00,
+    "ventas_contado": 30,
+    "ventas_credito": 12,
+    "sucursales": {
+      "1": { "nombre": "Prado", "total": 8000, "cantidad": 20 },
+      "2": { "nombre": "El Alto", "total": 4500.50, "cantidad": 22 }
+    },
+    "ventas": [ ... ]              // filas individuales
+  },
+  "message": "Reporte de ingresos generado"
+}
+```
+
+```
+GET /ventas/ventas/reportes/ingresos/pdf?fecha=2026-06-17
+```
+
+**Respuesta:** `application/pdf` binario.
+
+#### 8.3 Fidelización de clientes
+
+```
+GET /ventas/ventas/clientes/top?limit=10&id_sucursal=1
+```
+
+Top compradores: `[{ id_cliente, nombres, nit_ci, total_compras, total_gastado, ultima_compra }]`
+
+```
+GET /ventas/ventas/clientes/:id/fidelizacion?id_sucursal=1
+```
+
+Estadísticas: frecuencia, sucursal preferida, producto más consumido, últimas compras.
+
+---
+
+### 9. Mapa de migración (Mock → API real)
+
+| Componente Angular    | Reemplazar MockDatabase por        | Endpoint real                                                          |
+| --------------------- | ---------------------------------- | ---------------------------------------------------------------------- |
+| Catálogo (selects)    | `getAll()` de entidad              | `GET /{apiPrefix}/{entity}` con paginación                             |
+| EntityCrud (listar)   | `getAll()` → `getPaged()`          | `GET ?page=&limit=`                                                    |
+| EntityCrud (crear)    | `create()`                         | `POST` con body JSON                                                   |
+| EntityCrud (editar)   | `update()`                         | `PUT /:id` con body parcial                                            |
+| EntityCrud (eliminar) | `delete()`                         | `DELETE /:id` (soft-delete)                                            |
+| CompraFormComponent   | `mockDatabase.compras`             | `POST /compras/compras` (ver sección 6.1)                              |
+| VentaFormComponent    | `mockDatabase.ventas`              | `POST /ventas/ventas` (ver sección 5.1)                                |
+| Dashboard KPI         | `mockDatabase.getKpis()`           | `GET /ventas/reportes/ingresos` + `GET /inventarios/stock/reporte`     |
+| Reporte Stock PDF     | No existe mock                     | `GET /inventarios/stock/reporte/pdf`                                   |
+| Reporte Ingresos PDF  | No existe mock                     | `GET /ventas/reportes/ingresos/pdf`                                    |
+| Factura PDF           | `mockDatabase.generarFacturaPdf`   | `GET /ventas/facturas/:id/pdf` (blob)                                  |
+| Cliente fidelización  | `mockDatabase.obtenerFidelizacion` | `GET /ventas/clientes/:id/fidelizacion`                                |
+| Pagos CxC             | No existe UI especializada         | `GET /finanzas/cuentas-por-cobrar` + `POST /finanzas/pagos-clientes`   |
+| Pagos CxP             | No existe UI especializada         | `GET /finanzas/cuentas-por-pagar` + `POST /finanzas/pagos-proveedores` |
+
+### 10. Notas importantes para el frontend
+
+1. **PDFs:** Siempre `responseType: 'blob'`. Usar `window.URL.createObjectURL(blob)` para mostrar. NO usar base64. Content-Type: `application/pdf`, Content-Disposition: `inline`.
+
+2. **Paginación:** Cada GET-list devuelve `pagination: { count, pages }`. El frontend debe enviar `page` y `limit` en cada petición.
+
+3. **Soft-deletes:** Las entidades con `estado` booleano se "eliminan" con `DELETE` (set `estado=0`). Categorías, unidades e inventario usan hard-delete (registro se borra realmente).
+
+4. **Errores 400 vs 500:** Todos los servicios retornan `{ code, data: null, message, details? }`. Los errores de validación (400) tienen `message` descriptivo. Errores 500 tienen mensaje genérico.
+
+5. **Transacciones:** POST `/ventas/ventas` y POST `/compras/compras` son transaccionales. Si algo falla a mitad, todo se revierte (rollback). Si el pago/CxP externo falla, la operación se anula automáticamente.
+
+6. **Pagos parciales:** Tanto `POST /pagos-clientes` como `POST /pagos-proveedores` permiten pagos parciales. Actualizan `saldo` automáticamente. Cuando el saldo llega a 0, el estado cambia a `PAGADA`.
+
+7. **Swagger:** Cada microservicio tiene su propia UI en `http://localhost:{puerto}/{apiPrefix}/docs` (ej: `http://localhost:7800/api/organizaciones/docs`). También se accede vía gateway.

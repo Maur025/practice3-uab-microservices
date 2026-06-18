@@ -10,6 +10,7 @@ import {
   transferirStock,
   reporteStockPorEmpresa,
 } from "../services/inventory.service.js";
+import { generateStockReportPdf } from "../services/stock-report-pdf.service.js";
 
 export const getInventarios = asyncHandler(async (req, res) => {
   const { page, limit, offset } = getPagination(req.query);
@@ -57,4 +58,13 @@ export const getReporteStock = asyncHandler(async (req, res) => {
   const id_producto = req.query.id_producto ? Number(req.query.id_producto) : undefined;
   const rows = await reporteStockPorEmpresa(id_empresa, id_producto);
   successResponse(res, rows, 200, "OK");
+});
+
+export const getReporteStockPdf = asyncHandler(async (req, res) => {
+  const id_empresa = req.query.id_empresa ? Number(req.query.id_empresa) : undefined;
+  const id_producto = req.query.id_producto ? Number(req.query.id_producto) : undefined;
+  const pdfBuffer = await generateStockReportPdf(id_empresa, id_producto);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="reporte-stock.pdf"');
+  res.send(pdfBuffer);
 });

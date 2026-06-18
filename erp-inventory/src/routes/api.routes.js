@@ -13,7 +13,7 @@ import { getUnidades, getUnidad, postUnidad, putUnidad, removeUnidad } from "../
 import { getProducts, getProduct, postProduct, putProduct, removeProduct } from "../controllers/product.controller.js";
 import {
   getInventarios, getInventario, postInventario, putInventario, removeInventario,
-  postInicializarStock, postTransferirStock, getReporteStock,
+  postInicializarStock, postTransferirStock, getReporteStock, getReporteStockPdf,
 } from "../controllers/inventory.controller.js";
 import { getMovimientos, getMovimiento, postMovimiento } from "../controllers/movement.controller.js";
 
@@ -46,6 +46,7 @@ apiRouter.delete("/stock/:id", idParamValidator, validate, removeInventario);
 apiRouter.post("/stock/inicializar", stockInicialValidator, validate, postInicializarStock);
 apiRouter.post("/stock/transferir", transferenciaValidator, validate, postTransferirStock);
 apiRouter.get("/stock/reporte", sucursalQueryValidator, validate, getReporteStock);
+apiRouter.get("/stock/reporte/pdf", sucursalQueryValidator, validate, getReporteStockPdf);
 
 apiRouter.get("/movimientos", getMovimientos);
 apiRouter.get("/movimientos/:id", idParamValidator, validate, getMovimiento);

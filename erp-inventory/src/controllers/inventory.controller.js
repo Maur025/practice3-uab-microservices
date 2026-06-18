@@ -9,6 +9,9 @@ import {
   inicializarStock,
   transferirStock,
   reporteStockPorEmpresa,
+  findLotesByProductoSucursal,
+  findLoteById,
+  crearLote,
 } from "../services/inventory.service.js";
 import { generateStockReportPdf } from "../services/stock-report-pdf.service.js";
 
@@ -67,4 +70,34 @@ export const getReporteStockPdf = asyncHandler(async (req, res) => {
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader("Content-Disposition", 'inline; filename="reporte-stock.pdf"');
   res.send(pdfBuffer);
+});
+
+// --- Lotes ---
+
+export const getLotes = asyncHandler(async (req, res) => {
+  const { page, limit, offset } = getPagination(req.query);
+  const id_sucursal = req.query.id_sucursal ? Number(req.query.id_sucursal) : undefined;
+  const id_producto = req.query.id_producto ? Number(req.query.id_producto) : undefined;
+  const { rows, count } = await findLotesByProductoSucursal({ limit, offset, id_sucursal, id_producto });
+  const pagination = getPaginationMeta(count, page, limit);
+  successResponse(res, rows, 200, "OK", pagination);
+});
+
+export const getLote = asyncHandler(async (req, res) => {
+  const data = await findLoteById(Number(req.params.id));
+  successResponse(res, data);
+});
+
+export const postLote = asyncHandler(async (req, res) => {
+  const { id_producto, id_sucursal, cantidad, costo_unitario, precio_venta, referencia } = req.body;
+  const data = await crearLote({
+    id_producto,
+    id_sucursal,
+    cantidad,
+    costo_unitario,
+    precio_venta,
+    origen: 'AJUSTE',
+    referencia,
+  });
+  successResponse(res, data, 201, "Lote creado correctamente");
 });

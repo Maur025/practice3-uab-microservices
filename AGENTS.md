@@ -317,12 +317,16 @@ Content-Type: application/json
 {
   "id_sucursal": 1,
   "productos": [
-    { "id_producto": 1, "cantidad": 100, "stock_minimo": 10 }
+    { "id_producto": 1, "cantidad": 100, "stock_minimo": 10, "costo_unitario": 8.50, "precio_venta": 15.00 }
   ]
 }
 ```
 
 **Respuesta:** `{ movimientos_generados: [id_mov, ...] }` (código 201)
+
+**Campos nuevos en productos[]:**
+- `costo_unitario` (opcional): Costo unitario del lote inicial (actualiza `producto.costo` como promedio ponderado)
+- `precio_venta` (opcional): Precio de venta del lote (actualiza `producto.precio_venta` global)
 
 #### 4.3 Transferir stock entre sucursales
 
@@ -354,7 +358,9 @@ Content-Type: application/json
   "origen": "AJUSTE",              // COMPRA | VENTA | DEVOLUCION | AJUSTE
   "cantidad": 10,
   "referencia": "AJUSTE-MANUAL",
-  "observacion": "Ajuste por inventario físico"
+  "observacion": "Ajuste por inventario físico",
+  "costo_unitario": 8.50,       // opcional, solo para ENTRADA
+  "precio_venta": 15.00         // opcional, solo para ENTRADA
 }
 ```
 
@@ -664,3 +670,113 @@ Estadísticas: frecuencia, sucursal preferida, producto más consumido, últimas
 6. **Pagos parciales:** Tanto `POST /pagos-clientes` como `POST /pagos-proveedores` permiten pagos parciales. Actualizan `saldo` automáticamente. Cuando el saldo llega a 0, el estado cambia a `PAGADA`.
 
 7. **Swagger:** Cada microservicio tiene su propia UI en `http://localhost:{puerto}/{apiPrefix}/docs` (ej: `http://localhost:7800/api/organizaciones/docs`). También se accede vía gateway.
+
+### 11. Sistema de Lotes (Nuevo)
+
+Se agregó el sistema de **lotes** (`producto_lote`) para manejar stock con trazabilidad de costos por sucursal. El stock `inventario.stock_actual` ahora se calcula como la **suma de todos los lotes activos** de un producto en una sucursal.
+
+#### 11.1 Tabla `producto_lote`
+
+| Columna          | Tipo           | Descripción                                    |
+| ---------------- | -------------- | ---------------------------------------------- |
+| `id_lote`        | PK auto        | ID del lote                                    |
+| `id_producto`    | FK → producto  | Producto                                       |
+| `id_sucursal`    | FK → sucursal  | Sucursal                                       |
+| `cantidad`       | DECIMAL(10,2)  | Cantidad disponible en este lote               |
+| `costo_unitario` | DECIMAL(10,2)  | Costo unitario de este lote                    |
+| `precio_venta`   | DECIMAL(10,2)  | Precio de venta de este lote                   |
+| `origen`         | VARCHAR(50)    | INICIAL \| COMPRA \| TRANSFERENCIA \| AJUSTE \| DEVOLUCION |
+| `referencia`     | VARCHAR(100)   | Referencia (ej: COMPRA-5, VENTA-3)            |
+| `fecha_ingreso`  | DATETIME       | Fecha de ingreso del lote                     |
+
+#### 11.2 Endpoints de Lotes
+
+```
+GET /inventarios/lotes?id_sucursal=<int>&id_producto=<int>
+```
+Lista todos los lotes activos (cantidad > 0) ordenados FIFO (más antiguos primero). Incluye `costo_unitario`, `precio_venta`, `origen`.
+
+```
+GET /inventarios/lotes/:id
+```
+Detalle de un lote específico.
+
+```
+POST /inventarios/lotes
+Content-Type: application/json
+
+{
+  "id_producto": 1,
+  "id_sucursal": 1,
+  "cantidad": 50,
+  "costo_unitario": 12.50,     // opcional
+  "precio_venta": 18.00,       // opcional
+  "referencia": "AJUSTE-MANUAL"
+}
+```
+Crea un lote manualmente. Si se provee `precio_venta`, actualiza `producto.precio_venta` global. Si se provee `costo_unitario`, recalcula `producto.costo` como promedio ponderado.
+
+#### 11.3 Inicialización de stock (actualizada)
+
+```
+POST /inventarios/stock/inicializar
+Content-Type: application/json
+
+{
+  "id_sucursal": 1,
+  "productos": [
+    {
+      "id_producto": 1,
+      "cantidad": 100,
+      "stock_minimo": 10,
+      "costo_unitario": 8.50,     // NUEVO: opcional, costo del lote inicial
+      "precio_venta": 15.00       // NUEVO: opcional, precio de venta del lote
+    }
+  ]
+}
+```
+
+**Corrección aplicada:** Antes el stock se duplicaba (se insertaba en `inventario` y luego `ajustarStock` lo sumaba de nuevo). Ahora:
+1. Se asegura la fila en `inventario` con `stock_actual=0`
+2. Se crea un registro en `producto_lote` con los datos del lote
+3. Se recalcula `stock_actual = SUM(producto_lote.cantidad)` 
+4. Se registra el movimiento de inventario
+
+#### 11.4 Stock ahora deriva de lotes
+
+`inventario.stock_actual` ya no se actualiza directamente. Se recalcula desde `producto_lote` mediante:
+```sql
+UPDATE inventario SET stock_actual = (
+  SELECT COALESCE(SUM(cantidad), 0)
+  FROM producto_lote
+  WHERE id_sucursal = ? AND id_producto = ?
+)
+```
+
+**Flujo de descuento (FIFO):** Al vender, se descuenta de los lotes más antiguos primero.
+
+**Flujo de ingreso:** Al comprar o inicializar, se crea un nuevo lote con su costo_unitario.
+
+#### 11.5 Cambios en respuestas existentes
+
+- `GET /inventarios/stock` ahora incluye: `costo_promedio` y `total_lotes`
+- `GET /inventarios/catalogo/productos` actualiza `costo` y `precio_venta` automáticamente al crear lotes
+- `GET /inventarios/stock/reporte` ahora incluye `costo_promedio`
+
+### 12. Tareas pendientes para el Frontend
+
+1. **Agregar UI de Lotes:** Crear componente para listar lotes por producto/sucursal (`GET /inventarios/lotes`). Mostrar columnas: ID, cantidad, costo_unitario, precio_venta, origen, fecha.
+
+2. **Formulario de lote manual:** Crear formulario para agregar un lote manualmente (`POST /inventarios/lotes`) con campos: producto, sucursal, cantidad, costo_unitario (opcional), precio_venta (opcional).
+
+3. **Inicializar stock con costo/precio:** Actualizar el formulario de inicialización de stock para incluir los campos opcionales `costo_unitario` y `precio_venta` por producto.
+
+4. **Tabla stock con costo promedio:** Mostrar `costo_promedio` en la tabla de inventario/stock.
+
+5. **Migración DB:** Ejecutar el script `containers/create-table/004-migrate-lotes.sql` para crear la tabla `producto_lote` y migrar datos existentes:
+   ```bash
+   docker exec -i market-system-db mariadb -u root -p'root123456' sistema_supermercado_db < containers/create-table/004-migrate-lotes.sql
+   ```
+   Esto crea un lote por cada registro existente en `inventario`, usando `producto.costo` y `producto.precio_venta`.
+
+6. **Revisar cálculos de costos:** Verificar que después de la migración, `stock_actual` en `inventario` coincida con `SUM(cantidad)` de `producto_lote` para cada producto+sucursal.

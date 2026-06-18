@@ -1,5 +1,6 @@
 import { db } from "../db.js";
 import { AppError } from "../util/response.js";
+import { crearLote, descontarStockDeLotes, registrarMovimiento } from "./inventory.service.js";
 
 export const findAllMovimientos = async ({ limit, offset, id_sucursal, id_producto, tipo_movimiento, fecha_desde, fecha_hasta } = {}) => {
   let query = `SELECT m.*, s.nombre as sucursal_nombre, p.nombre as producto_nombre,
@@ -77,16 +78,24 @@ export const findMovimientoById = async (id) => {
 export const createMovimiento = async (data) => {
   const { id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia, observacion } = data;
 
-  const signo = tipo_movimiento === "ENTRADA" ? "+" : "-";
-  await db.query(
-    `UPDATE inventario SET stock_actual = stock_actual ${signo} ? WHERE id_sucursal = ? AND id_producto = ?`,
-    [cantidad, id_sucursal, id_producto],
+  if (tipo_movimiento === "ENTRADA") {
+    await crearLote({
+      id_producto,
+      id_sucursal,
+      cantidad,
+      costo_unitario: data.costo_unitario || null,
+      precio_venta: data.precio_venta || null,
+      origen: origen === 'COMPRA' ? 'COMPRA' : 'AJUSTE',
+      referencia: referencia || null,
+    });
+  } else {
+    await descontarStockDeLotes(id_sucursal, id_producto, cantidad);
+  }
+
+  const movId = await registrarMovimiento(
+    id_sucursal, id_producto, cantidad, tipo_movimiento,
+    origen, referencia, observacion,
   );
 
-  const [result] = await db.query(
-    "INSERT INTO movimiento_inventario (id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia, observacion) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia || null, observacion || null],
-  );
-
-  return findMovimientoById(result.insertId);
+  return findMovimientoById(movId);
 };

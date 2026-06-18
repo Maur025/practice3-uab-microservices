@@ -121,21 +121,33 @@ export const createPurchase = async (data) => {
       );
 
       const [existing] = await connection.query(
-        "SELECT id_inventario, stock_actual FROM inventario WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE",
+        "SELECT id_inventario FROM inventario WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE",
         [id_sucursal, item.id_producto],
       );
 
-      if (existing.length > 0) {
+      if (existing.length === 0) {
         await connection.query(
-          "UPDATE inventario SET stock_actual = stock_actual + ? WHERE id_sucursal = ? AND id_producto = ?",
-          [item.cantidad, id_sucursal, item.id_producto],
-        );
-      } else {
-        await connection.query(
-          "INSERT INTO inventario (id_sucursal, id_producto, stock_actual, stock_minimo) VALUES (?, ?, ?, 0)",
-          [id_sucursal, item.id_producto, item.cantidad],
+          "INSERT INTO inventario (id_sucursal, id_producto, stock_actual, stock_minimo) VALUES (?, ?, 0, 0)",
+          [id_sucursal, item.id_producto],
         );
       }
+
+      await connection.query(
+        `INSERT INTO producto_lote (id_producto, id_sucursal, cantidad, costo_unitario, precio_venta, origen, referencia)
+         VALUES (?, ?, ?, ?, NULL, 'COMPRA', ?)`,
+        [item.id_producto, id_sucursal, item.cantidad, item.precio_compra, `COMPRA-${id_compra}`],
+      );
+
+      await connection.query(
+        `UPDATE inventario i
+         SET i.stock_actual = (
+           SELECT COALESCE(SUM(pl.cantidad), 0)
+           FROM producto_lote pl
+           WHERE pl.id_sucursal = i.id_sucursal AND pl.id_producto = i.id_producto
+         )
+         WHERE i.id_sucursal = ? AND i.id_producto = ?`,
+        [id_sucursal, item.id_producto],
+      );
 
       await connection.query(
         "INSERT INTO movimiento_inventario (id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia, observacion) VALUES (?, ?, 'ENTRADA', 'COMPRA', ?, ?, ?)",
@@ -204,9 +216,51 @@ export const annulPurchase = async (id) => {
     );
 
     for (const item of detalles) {
+      const [lotesCompra] = await connection.query(
+        `SELECT id_lote, cantidad FROM producto_lote
+         WHERE id_sucursal = ? AND id_producto = ? AND origen = 'COMPRA' AND referencia = ?
+         ORDER BY fecha_ingreso ASC`,
+        [purchase.id_sucursal, item.id_producto, `COMPRA-${id}`],
+      );
+
+      let pendiente = Number(item.cantidad);
+      for (const lote of lotesCompra) {
+        if (pendiente <= 0) break;
+        const disponible = Number(lote.cantidad);
+        const aDevolver = Math.min(disponible, pendiente);
+        await connection.query(
+          "UPDATE producto_lote SET cantidad = cantidad - ? WHERE id_lote = ?",
+          [aDevolver, lote.id_lote],
+        );
+        pendiente -= aDevolver;
+      }
+
+      if (pendiente > 0) {
+        const [otrosLotes] = await connection.query(
+          `SELECT id_lote, cantidad FROM producto_lote
+           WHERE id_sucursal = ? AND id_producto = ? AND cantidad > 0
+           ORDER BY fecha_ingreso ASC`,
+          [purchase.id_sucursal, item.id_producto],
+        );
+        for (const lote of otrosLotes) {
+          if (pendiente <= 0) break;
+          const disponible = Number(lote.cantidad);
+          const aDevolver = Math.min(disponible, pendiente);
+          await connection.query(
+            "UPDATE producto_lote SET cantidad = cantidad - ? WHERE id_lote = ?",
+            [aDevolver, lote.id_lote],
+          );
+          pendiente -= aDevolver;
+        }
+      }
+
       await connection.query(
-        "UPDATE inventario SET stock_actual = stock_actual - ? WHERE id_sucursal = ? AND id_producto = ?",
-        [item.cantidad, purchase.id_sucursal, item.id_producto],
+        `UPDATE inventario SET stock_actual = (
+          SELECT COALESCE(SUM(pl.cantidad), 0)
+          FROM producto_lote pl
+          WHERE pl.id_sucursal = ? AND pl.id_producto = ?
+        ) WHERE id_sucursal = ? AND id_producto = ?`,
+        [purchase.id_sucursal, item.id_producto, purchase.id_sucursal, item.id_producto],
       );
 
       await connection.query(

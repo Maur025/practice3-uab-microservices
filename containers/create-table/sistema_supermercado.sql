@@ -501,6 +501,27 @@ UNLOCK TABLES;
 -- Table structure for table `producto`
 --
 
+DROP TABLE IF EXISTS `producto_lote`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `producto_lote` (
+  `id_lote` int(11) NOT NULL AUTO_INCREMENT,
+  `id_producto` int(11) NOT NULL,
+  `id_sucursal` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL DEFAULT '0.00',
+  `costo_unitario` decimal(10,2) DEFAULT NULL,
+  `precio_venta` decimal(10,2) DEFAULT NULL,
+  `origen` varchar(50) DEFAULT 'INICIAL',
+  `referencia` varchar(100) DEFAULT NULL,
+  `fecha_ingreso` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_lote`),
+  KEY `fk_lote_producto` (`id_producto`),
+  KEY `fk_lote_sucursal` (`id_sucursal`),
+  CONSTRAINT `fk_lote_producto` FOREIGN KEY (`id_producto`) REFERENCES `producto` (`id_producto`),
+  CONSTRAINT `fk_lote_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursal` (`id_sucursal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 DROP TABLE IF EXISTS `producto`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;

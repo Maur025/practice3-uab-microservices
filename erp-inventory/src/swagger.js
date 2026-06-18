@@ -29,6 +29,7 @@ export const openApiSpec = {
     { name: "Productos" },
     { name: "Inventario (Stock)" },
     { name: "Movimientos" },
+    { name: "Lotes" },
   ],
   components: {
     schemas: {
@@ -319,6 +320,40 @@ export const openApiSpec = {
         responses: {
           200: jsonResponse("Movimiento encontrado", genericObjectSchema),
           404: jsonResponse("Movimiento no encontrado", genericObjectSchema),
+        },
+      },
+    },
+    "/lotes": {
+      get: {
+        tags: ["Lotes"],
+        summary: "Listar lotes (inventario por lotes)",
+        parameters: [
+          { name: "page", in: "query", schema: { type: "integer" } },
+          { name: "limit", in: "query", schema: { type: "integer" } },
+          { name: "id_sucursal", in: "query", schema: { type: "integer" } },
+          { name: "id_producto", in: "query", schema: { type: "integer" } },
+        ],
+        responses: {
+          200: jsonResponse("Lista de lotes", { type: "array", items: genericObjectSchema }),
+        },
+      },
+      post: {
+        tags: ["Lotes"],
+        summary: "Crear un lote (ingreso manual de stock con costo y precio)",
+        responses: {
+          201: jsonResponse("Lote creado", genericObjectSchema),
+          400: jsonResponse("Error de validación", genericObjectSchema),
+        },
+      },
+    },
+    "/lotes/{id}": {
+      get: {
+        tags: ["Lotes"],
+        summary: "Obtener lote por ID",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        responses: {
+          200: jsonResponse("Lote encontrado", genericObjectSchema),
+          404: jsonResponse("Lote no encontrado", genericObjectSchema),
         },
       },
     },

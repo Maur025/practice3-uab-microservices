@@ -1,12 +1,17 @@
 import { asyncHandler, successResponse } from "../util/response.js";
 import { getPagination, getPaginationMeta } from "../util/pagination.js";
-import { findAllPendingCollections, registerPendingCollection } from "../services/pending-collection.service.js";
+import { findAllPendingCollections, findPendingCollectionById, registerPendingCollection } from "../services/pending-collection.service.js";
 
 export const getPendingCollections = asyncHandler(async (req, res) => {
   const { page, limit, offset } = getPagination(req.query);
   const { rows, count } = await findAllPendingCollections({ limit, offset });
   const pagination = getPaginationMeta(count, page, limit);
   successResponse(res, rows, 200, "OK", pagination);
+});
+
+export const getPendingCollection = asyncHandler(async (req, res) => {
+  const data = await findPendingCollectionById(Number(req.params.id));
+  successResponse(res, data);
 });
 
 export const createPendingCollection = asyncHandler(async (req, res) => {

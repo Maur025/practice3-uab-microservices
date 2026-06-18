@@ -16,15 +16,6 @@ app.use(
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   }),
 );
-app.use(express.json({ limit: "25mb" }));
-app.use(express.text({ limit: "25mb" }));
-app.use(
-  express.urlencoded({
-    extended: true,
-    parameterLimit: 100_000,
-    limit: "50mb",
-  }),
-);
 
 Object.entries(configServices).forEach(([path, target]) => {
   app.use(

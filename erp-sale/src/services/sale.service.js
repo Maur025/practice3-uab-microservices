@@ -57,7 +57,7 @@ export const registerSale = async (saleData) => {
       );
 
       const [inventarios] = await connection.query(
-        `SELECT id_inventario, stock FROM inventario
+        `SELECT id_inventario, stock_actual FROM inventario
          WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE`,
         [id_sucursal, item.id_producto],
       );
@@ -67,22 +67,44 @@ export const registerSale = async (saleData) => {
       }
 
       const inv = inventarios[0];
-      const stock_anterior = Number(inv.stock);
-      const stock_nuevo = stock_anterior - Number(item.cantidad);
+      const stockDisponible = Number(inv.stock_actual);
 
-      if (stock_nuevo < 0) {
-        throw new AppError(`Stock insuficiente para el producto ${item.id_producto}. Disponible: ${stock_anterior}, solicitado: ${item.cantidad}`, 400);
+      if (stockDisponible < Number(item.cantidad)) {
+        throw new AppError(`Stock insuficiente para el producto ${item.id_producto}. Disponible: ${stockDisponible}, solicitado: ${item.cantidad}`, 400);
+      }
+
+      const [lotes] = await connection.query(
+        `SELECT id_lote, cantidad FROM producto_lote
+         WHERE id_sucursal = ? AND id_producto = ? AND cantidad > 0
+         ORDER BY fecha_ingreso ASC, id_lote ASC`,
+        [id_sucursal, item.id_producto],
+      );
+
+      let pendiente = Number(item.cantidad);
+      for (const lote of lotes) {
+        if (pendiente <= 0) break;
+        const disponible = Number(lote.cantidad);
+        const aDescontar = Math.min(disponible, pendiente);
+        await connection.query(
+          "UPDATE producto_lote SET cantidad = cantidad - ? WHERE id_lote = ?",
+          [aDescontar, lote.id_lote],
+        );
+        pendiente -= aDescontar;
       }
 
       await connection.query(
-        `UPDATE inventario SET stock = ? WHERE id_inventario = ?`,
-        [stock_nuevo, inv.id_inventario],
+        `UPDATE inventario SET stock_actual = (
+          SELECT COALESCE(SUM(pl.cantidad), 0)
+          FROM producto_lote pl
+          WHERE pl.id_sucursal = ? AND pl.id_producto = ?
+        ) WHERE id_sucursal = ? AND id_producto = ?`,
+        [id_sucursal, item.id_producto, id_sucursal, item.id_producto],
       );
 
       await connection.query(
-        `INSERT INTO movimiento_inventario (id_inventario, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, referencia_tipo, referencia_id, observacion)
-         VALUES (?, 'SALIDA', ?, ?, ?, 'VENTA', ?, ?)`,
-        [inv.id_inventario, item.cantidad, stock_anterior, stock_nuevo, id_venta, `Venta #${id_venta}`],
+        `INSERT INTO movimiento_inventario (id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia, observacion)
+         VALUES (?, ?, 'SALIDA', 'VENTA', ?, ?, ?)`,
+        [id_sucursal, item.id_producto, item.cantidad, `VENTA-${id_venta}`, `Venta #${id_venta}`],
       );
     }
 
@@ -114,7 +136,7 @@ export const registerSale = async (saleData) => {
         throw new AppError("El cliente es obligatorio para ventas a crédito", 400);
       }
 
-      const cxcReq = await fetch("http://localhost:7805/api/payments/incoming/pending", {
+      const cxcReq = await fetch("http://localhost:7805/api/finanzas/cuentas-por-cobrar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_venta, id_cliente, monto_total: total_venta }),
@@ -124,7 +146,7 @@ export const registerSale = async (saleData) => {
         await db.query("UPDATE venta SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         await db.query("UPDATE factura SET estado = 'ANULADA' WHERE id_venta = ?", [id_venta]);
         const errData = await cxcReq.json().catch(() => ({}));
-        throw new AppError(`Finanzas rechazó la operación. Venta ANULADA. Motivo: ${errData.error || "Error de conexión"}`, 500);
+        throw new AppError(`Finanzas rechazó la operación. Venta ANULADA. Motivo: ${errData.message || "Error de conexión"}`, 500);
       }
     }
 
@@ -209,23 +231,38 @@ export const annulSale = async (id) => {
     );
 
     for (const det of detalles) {
-      const [inventarios] = await connection.query(
-        `SELECT id_inventario, stock FROM inventario
-         WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE`,
+      const [existing] = await connection.query(
+        "SELECT id_inventario FROM inventario WHERE id_sucursal = ? AND id_producto = ? FOR UPDATE",
         [ventas[0].id_sucursal, det.id_producto],
       );
 
-      if (inventarios.length > 0) {
-        const inv = inventarios[0];
-        const stock_anterior = Number(inv.stock);
-        const stock_nuevo = stock_anterior + Number(det.cantidad);
-        await connection.query("UPDATE inventario SET stock = ? WHERE id_inventario = ?", [stock_nuevo, inv.id_inventario]);
+      if (existing.length === 0) {
         await connection.query(
-          `INSERT INTO movimiento_inventario (id_inventario, tipo_movimiento, cantidad, stock_anterior, stock_nuevo, referencia_tipo, referencia_id, observacion)
-           VALUES (?, 'ENTRADA', ?, ?, ?, 'VENTA_ANULADA', ?, ?)`,
-          [inv.id_inventario, det.cantidad, stock_anterior, stock_nuevo, id, `Devolución por anulación de venta #${id}`],
+          "INSERT INTO inventario (id_sucursal, id_producto, stock_actual, stock_minimo) VALUES (?, ?, 0, 0)",
+          [ventas[0].id_sucursal, det.id_producto],
         );
       }
+
+      await connection.query(
+        `INSERT INTO producto_lote (id_producto, id_sucursal, cantidad, costo_unitario, precio_venta, origen, referencia)
+         VALUES (?, ?, ?, NULL, NULL, 'DEVOLUCION', ?)`,
+        [det.id_producto, ventas[0].id_sucursal, det.cantidad, `VENTA-ANULADA-${id}`],
+      );
+
+      await connection.query(
+        `UPDATE inventario SET stock_actual = (
+          SELECT COALESCE(SUM(pl.cantidad), 0)
+          FROM producto_lote pl
+          WHERE pl.id_sucursal = ? AND pl.id_producto = ?
+        ) WHERE id_sucursal = ? AND id_producto = ?`,
+        [ventas[0].id_sucursal, det.id_producto, ventas[0].id_sucursal, det.id_producto],
+      );
+
+      await connection.query(
+        `INSERT INTO movimiento_inventario (id_sucursal, id_producto, tipo_movimiento, origen, cantidad, referencia, observacion)
+         VALUES (?, ?, 'ENTRADA', 'DEVOLUCION', ?, ?, ?)`,
+        [ventas[0].id_sucursal, det.id_producto, det.cantidad, `VENTA-ANULADA-${id}`, `Devolución por anulación de venta #${id}`],
+      );
     }
 
     await connection.commit();

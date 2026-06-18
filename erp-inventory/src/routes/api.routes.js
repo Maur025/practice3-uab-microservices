@@ -6,14 +6,15 @@ import {
   productoValidator, productoUpdateValidator,
   inventarioValidator, inventarioUpdateValidator,
   movimientoValidator, stockInicialValidator, transferenciaValidator,
-  sucursalQueryValidator,
+  sucursalQueryValidator, loteValidator,
 } from "../validators/index.js";
 import { getCategorias, getCategoria, postCategoria, putCategoria, removeCategoria } from "../controllers/categoria.controller.js";
 import { getUnidades, getUnidad, postUnidad, putUnidad, removeUnidad } from "../controllers/unidad.controller.js";
 import { getProducts, getProduct, postProduct, putProduct, removeProduct } from "../controllers/product.controller.js";
 import {
   getInventarios, getInventario, postInventario, putInventario, removeInventario,
-  postInicializarStock, postTransferirStock, getReporteStock,
+  postInicializarStock, postTransferirStock, getReporteStock, getReporteStockPdf,
+  getLotes, getLote, postLote,
 } from "../controllers/inventory.controller.js";
 import { getMovimientos, getMovimiento, postMovimiento } from "../controllers/movement.controller.js";
 
@@ -46,9 +47,14 @@ apiRouter.delete("/stock/:id", idParamValidator, validate, removeInventario);
 apiRouter.post("/stock/inicializar", stockInicialValidator, validate, postInicializarStock);
 apiRouter.post("/stock/transferir", transferenciaValidator, validate, postTransferirStock);
 apiRouter.get("/stock/reporte", sucursalQueryValidator, validate, getReporteStock);
+apiRouter.get("/stock/reporte/pdf", sucursalQueryValidator, validate, getReporteStockPdf);
 
 apiRouter.get("/movimientos", getMovimientos);
 apiRouter.get("/movimientos/:id", idParamValidator, validate, getMovimiento);
 apiRouter.post("/movimientos", movimientoValidator, validate, postMovimiento);
+
+apiRouter.get("/lotes", getLotes);
+apiRouter.get("/lotes/:id", idParamValidator, validate, getLote);
+apiRouter.post("/lotes", loteValidator, validate, postLote);
 
 export { apiRouter };

@@ -2,7 +2,7 @@ import { asyncHandler, successResponse } from "../util/response.js";
 import { getPagination, getPaginationMeta } from "../util/pagination.js";
 import { findAllSales, registerSale, findSaleById, annulSale } from "../services/sale.service.js";
 import { generateInvoicePdf } from "../services/pdf.service.js";
-import { getRevenueReport } from "../services/report.service.js";
+import { getRevenueReport, generateReportPdf } from "../services/report.service.js";
 import { getCustomerStats, getTopCustomers } from "../services/customer.service.js";
 
 export const getSales = asyncHandler(async (req, res) => {
@@ -40,6 +40,13 @@ export const getInvoicePdf = asyncHandler(async (req, res) => {
 export const getRevenue = asyncHandler(async (req, res) => {
   const data = await getRevenueReport(req.query);
   successResponse(res, data, 200, "Reporte de ingresos generado");
+});
+
+export const getRevenuePdf = asyncHandler(async (req, res) => {
+  const pdfBuffer = await generateReportPdf(req.query);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", 'inline; filename="reporte-ingresos.pdf"');
+  res.send(pdfBuffer);
 });
 
 export const getCustomerFidelity = asyncHandler(async (req, res) => {

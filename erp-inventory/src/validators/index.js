@@ -51,7 +51,6 @@ export const inventarioValidator = [
 ];
 
 export const inventarioUpdateValidator = [
-  body("stock_actual").optional().isFloat({ min: 0 }).withMessage("Stock actual debe ser número positivo"),
   body("stock_minimo").optional().isFloat({ min: 0 }).withMessage("Stock mínimo debe ser número positivo"),
 ];
 
@@ -63,6 +62,8 @@ export const movimientoValidator = [
   body("cantidad").isFloat({ min: 0.01 }).withMessage("Cantidad debe ser número positivo"),
   body("referencia").optional().isString().withMessage("Referencia debe ser texto"),
   body("observacion").optional().isString().withMessage("Observación debe ser texto"),
+  body("costo_unitario").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Costo unitario debe ser número positivo"),
+  body("precio_venta").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Precio venta debe ser número positivo"),
 ];
 
 export const stockInicialValidator = [
@@ -71,6 +72,8 @@ export const stockInicialValidator = [
   body("productos.*.id_producto").isInt({ min: 1 }).withMessage("Producto inválido"),
   body("productos.*.cantidad").isFloat({ min: 0.01 }).withMessage("Cantidad debe ser mayor a 0"),
   body("productos.*.stock_minimo").optional().isFloat({ min: 0 }).withMessage("Stock mínimo debe ser número positivo"),
+  body("productos.*.costo_unitario").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Costo unitario debe ser número positivo"),
+  body("productos.*.precio_venta").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Precio venta debe ser número positivo"),
 ];
 
 export const transferenciaValidator = [
@@ -83,4 +86,13 @@ export const transferenciaValidator = [
 
 export const sucursalQueryValidator = [
   query("id_sucursal").optional().isInt({ min: 1 }).withMessage("id_sucursal inválido"),
+];
+
+export const loteValidator = [
+  body("id_producto").isInt({ min: 1 }).withMessage("Producto inválido"),
+  body("id_sucursal").isInt({ min: 1 }).withMessage("Sucursal inválida"),
+  body("cantidad").isFloat({ min: 0.01 }).withMessage("Cantidad debe ser mayor a 0"),
+  body("costo_unitario").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Costo unitario debe ser número positivo"),
+  body("precio_venta").optional({ values: "null" }).isFloat({ min: 0 }).withMessage("Precio venta debe ser número positivo"),
+  body("referencia").optional().isString().withMessage("Referencia debe ser texto"),
 ];

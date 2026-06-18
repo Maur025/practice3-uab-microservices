@@ -27,7 +27,7 @@ export const openApiSpec = {
   openapi: "3.0.3",
   info: {
     title: "ERP Payment API",
-    version: "0.0.1",
+    version: "0.1.0",
     description:
       "Documentación de los endpoints del microservicio de finanzas.",
   },
@@ -71,6 +71,20 @@ export const openApiSpec = {
         },
       },
     },
+    "/cuentas-por-cobrar/{id}": {
+      get: {
+        tags: ["Cuentas por cobrar"],
+        summary: "Obtener cuenta por cobrar por ID",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          200: jsonResponse("Cuenta por cobrar encontrada", genericObjectSchema),
+          404: jsonResponse("No encontrada", genericObjectSchema),
+          500: jsonResponse("Error interno del servidor", genericObjectSchema),
+        },
+      },
+    },
     "/pagos-clientes": {
       get: {
         tags: ["Pagos de clientes"],
@@ -106,6 +120,30 @@ export const openApiSpec = {
           500: jsonResponse("Error interno del servidor", genericObjectSchema),
         },
       },
+      post: {
+        tags: ["Cuentas por pagar"],
+        summary: "Crear cuenta por pagar",
+        requestBody: jsonRequestBody,
+        responses: {
+          201: jsonResponse("Cuenta por pagar creada", genericObjectSchema),
+          400: jsonResponse("Solicitud inválida", genericObjectSchema),
+          500: jsonResponse("Error interno del servidor", genericObjectSchema),
+        },
+      },
+    },
+    "/cuentas-por-pagar/{id}": {
+      get: {
+        tags: ["Cuentas por pagar"],
+        summary: "Obtener cuenta por pagar por ID",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "integer" } },
+        ],
+        responses: {
+          200: jsonResponse("Cuenta por pagar encontrada", genericObjectSchema),
+          404: jsonResponse("No encontrada", genericObjectSchema),
+          500: jsonResponse("Error interno del servidor", genericObjectSchema),
+        },
+      },
     },
     "/pagos-proveedores": {
       get: {
@@ -116,6 +154,16 @@ export const openApiSpec = {
             type: "array",
             items: genericObjectSchema,
           }),
+          500: jsonResponse("Error interno del servidor", genericObjectSchema),
+        },
+      },
+      post: {
+        tags: ["Pagos de proveedores"],
+        summary: "Crear pago a proveedor",
+        requestBody: jsonRequestBody,
+        responses: {
+          201: jsonResponse("Pago a proveedor creado", genericObjectSchema),
+          400: jsonResponse("Solicitud inválida", genericObjectSchema),
           500: jsonResponse("Error interno del servidor", genericObjectSchema),
         },
       },

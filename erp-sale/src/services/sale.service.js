@@ -123,7 +123,7 @@ export const registerSale = async (saleData) => {
       await connection.query(
         `INSERT INTO detalle_factura (id_factura, id_producto, descripcion, cantidad, precio_unitario, subtotal)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [id_factura, item.id_producto, item.descripcion, item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)],
+        [id_factura, item.id_producto, item.descripcion ?? '', item.cantidad, item.precio_unitario, (item.cantidad * item.precio_unitario)],
       );
     }
 

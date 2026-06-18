@@ -1,6 +1,7 @@
 import { Router } from "express";
 import empleadoController from "../controllers/employee.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { sanitizeBody } from "../middlewares/sanitize.middleware.js";
 import {
   idParamValidator,
   empleadoValidator,
@@ -18,6 +19,7 @@ empleadoRouter.get(
 );
 empleadoRouter.post(
   "/",
+  sanitizeBody,
   empleadoValidator,
   validate,
   empleadoController.create,
@@ -25,6 +27,7 @@ empleadoRouter.post(
 empleadoRouter.put(
   "/:id",
   idParamValidator,
+  sanitizeBody,
   empleadoUpdateValidator,
   validate,
   empleadoController.update,

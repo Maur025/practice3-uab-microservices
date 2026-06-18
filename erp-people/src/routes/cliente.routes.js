@@ -7,6 +7,7 @@ import {
   updateClient,
 } from "../controllers/clients.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
+import { sanitizeBody } from "../middlewares/sanitize.middleware.js";
 import {
   clienteUpdateValidator,
   clienteValidator,
@@ -17,10 +18,11 @@ const clientRouter = Router();
 
 clientRouter.get("/", getClients);
 clientRouter.get("/:id", idParamValidator, validate, getClientById);
-clientRouter.post("/", clienteValidator, validate, createClient);
+clientRouter.post("/", sanitizeBody, clienteValidator, validate, createClient);
 clientRouter.put(
   "/:id",
   idParamValidator,
+  sanitizeBody,
   clienteUpdateValidator,
   validate,
   updateClient,
